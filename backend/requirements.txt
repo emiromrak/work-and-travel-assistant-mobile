@@ -6,3 +6,6 @@ bcrypt
 groq
 sqlalchemy
 psycopg2-binary
+requests
+geocoder
+geopy
