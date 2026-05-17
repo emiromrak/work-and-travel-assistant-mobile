@@ -115,15 +115,16 @@ async def update_profile_pic(user_id: int, file: UploadFile = File(...), db: Ses
     unique_filename = f"user_{user_id}_{int(time.time())}.{file_extension}"
 
     try:
-        # 2. Fotoğrafı Supabase "avatars" kovasına fırlat
+        # 2. Fotoğrafı Supabase "avatars" kovasına fırlat (supabase-py v2 uyumlu)
         supabase.storage.from_("avatars").upload(
             path=unique_filename,
             file=contents,
-            file_options={"content-type": file.content_type}
+            file_options={"content-type": file.content_type, "upsert": "true"}
         )
         
-        # 3. Herkesin görebileceği Public URL (Açık Link) adresini al
-        public_url = supabase.storage.from_("avatars").get_public_url(unique_filename)
+        # 3. Public URL al — v1 string döner, v2 farklı obje döner, ikisini de handle et
+        public_url_response = supabase.storage.from_("avatars").get_public_url(unique_filename)
+        public_url = public_url_response if isinstance(public_url_response, str) else str(public_url_response)
         
         # 4. Veritabanına sadece bu kısacık linki kaydet!
         user.profile_pic = public_url
