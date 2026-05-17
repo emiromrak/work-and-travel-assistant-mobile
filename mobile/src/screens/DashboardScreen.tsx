@@ -8,10 +8,13 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { TIMEZONES } from "../data/timezones";
+import { useNavigation } from "@react-navigation/native";
+import { useUser } from "../context/UserContext";
 
 // ─── Mock exchange rate ───────────────────────────────────────────────────────
 const MOCK_USD_TRY = 38.42;
@@ -68,6 +71,8 @@ defaultFlightDate.setDate(defaultFlightDate.getDate() + 90);
 const defaultDateStr = defaultFlightDate.toISOString().split("T")[0];
 
 export default function DashboardScreen() {
+  const navigation = useNavigation();
+  const { user } = useUser();
   const [times, setTimes] = useState<TimeData[]>([]);
   const [countdown, setCountdown] = useState("");
   const [flightDateInput, setFlightDateInput] = useState(defaultDateStr);
@@ -118,9 +123,16 @@ export default function DashboardScreen() {
               Work & Travel Asistanın
             </Text>
           </View>
-          <View className="w-10 h-10 rounded-full bg-brand-primary items-center justify-center">
-            <Ionicons name="person" size={20} color="#BBE1FA" />
-          </View>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate("Profile" as never)}
+            className="w-10 h-10 rounded-full bg-brand-primary items-center justify-center overflow-hidden border-2 border-brand-primary"
+          >
+            {user?.profilePic ? (
+              <Image source={{ uri: user.profilePic }} style={{ width: '100%', height: '100%' }} />
+            ) : (
+              <Ionicons name="person" size={20} color="#BBE1FA" />
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* ── Exchange Rate Widget ────────────────────────────────────────────── */}
