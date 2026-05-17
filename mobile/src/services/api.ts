@@ -53,7 +53,7 @@ export const fetchLogin = async (email: string, password: string) => {
     } catch (e) {
       throw new Error(`Sunucu Hatası: ${responseText.substring(0, 50)}...`);
     }
-    
+
     if (!response.ok) {
       throw new Error(data?.detail || 'Giriş yapılamadı.');
     }
@@ -87,7 +87,7 @@ export const fetchRegister = async (username: string, email: string, password: s
     } catch (e) {
       throw new Error(`Sunucu Hatası: ${responseText.substring(0, 50)}...`);
     }
-    
+
     if (!response.ok) {
       throw new Error(data?.detail || 'Kayıt işlemi başarısız.');
     }
@@ -116,10 +116,7 @@ export const updateProfilePicAPI = async (userId: number, imageUri: string) => {
 
     const response = await fetch(`${API_BASE_URL}/users/${userId}/profile-pic`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      body: formData,
+      body: formData, // headers kısmını tamamen uçurduk!
     });
 
     const responseText = await response.text();

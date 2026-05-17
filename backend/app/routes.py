@@ -5,10 +5,18 @@ import os
 from dotenv import load_dotenv
 from groq import Groq
 import bcrypt
+from supabase import create_client, Client
+import time
 
 from app.database import get_db
 from app.models import User, Post, Message
 from app.schemas import GuideRequest, UserCreate, UserLogin, PostCreate, MessageCreate, UserProfileUpdate
+
+# Supabase Storage Ayarları
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
+
 
 # --- DELTA ARAÇLARI ---
 try:
@@ -97,15 +105,34 @@ async def update_profile_pic(user_id: int, file: UploadFile = File(...), db: Ses
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı!")
+    
+    if not supabase:
+        raise HTTPException(status_code=500, detail="Supabase Storage ayarları eksik, .env dosyanı kontrol et!")
 
-    # Dosyayı oku ve base64'e çevirerek DB'ye kaydet
+    # 1. Dosyayı Oku ve İsmine Mühür Vur (Çakışmasın diye zaman damgası ekliyoruz)
     contents = await file.read()
-    mime_type = file.content_type or "image/jpeg"
-    b64_str = base64.b64encode(contents).decode("utf-8")
-    user.profile_pic = f"data:{mime_type};base64,{b64_str}"
-    db.commit()
-    return {"status": "success", "message": "Profil fotoğrafı başarıyla güncellendi!", "profile_pic": user.profile_pic}
+    file_extension = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+    unique_filename = f"user_{user_id}_{int(time.time())}.{file_extension}"
 
+    try:
+        # 2. Fotoğrafı Supabase "avatars" kovasına fırlat
+        supabase.storage.from_("avatars").upload(
+            path=unique_filename,
+            file=contents,
+            file_options={"content-type": file.content_type}
+        )
+        
+        # 3. Herkesin görebileceği Public URL (Açık Link) adresini al
+        public_url = supabase.storage.from_("avatars").get_public_url(unique_filename)
+        
+        # 4. Veritabanına sadece bu kısacık linki kaydet!
+        user.profile_pic = public_url
+        db.commit()
+        
+        return {"status": "success", "message": "Profil fotoğrafı buluta jilet gibi yüklendi!", "profile_pic": user.profile_pic}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fotoğraf yüklenirken hata oluştu: {str(e)}")
 
 # ==========================================
 # 🌍 SOSYAL AĞ API: FLOW (AKIŞ)
