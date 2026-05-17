@@ -1,0 +1,8 @@
+# Sanal Ortam
+venv/
+
+# Çevresel Değişkenler (Şifreler)
+.env
+
+# Veritabanı
+app.db
