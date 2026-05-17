@@ -99,17 +99,27 @@ export const fetchRegister = async (username: string, email: string, password: s
   }
 };
 
-// Profil Fotoğrafı Güncelleme API fonksiyonu
-export const updateProfilePicAPI = async (userId: number, base64Image: string) => {
+// Profil Fotoğrafı Güncelleme API fonksiyonu (FormData ile)
+export const updateProfilePicAPI = async (userId: number, imageUri: string) => {
   try {
+    // FormData ile dosyayı multipart olarak gönder
+    const formData = new FormData();
+    const filename = imageUri.split('/').pop() || 'profile.jpg';
+    const match = /\.(\w+)$/.exec(filename);
+    const mimeType = match ? `image/${match[1]}` : 'image/jpeg';
+
+    formData.append('file', {
+      uri: imageUri,
+      name: filename,
+      type: mimeType,
+    } as any);
+
     const response = await fetch(`${API_BASE_URL}/users/${userId}/profile-pic`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'multipart/form-data',
       },
-      body: JSON.stringify({
-        profile_pic: base64Image,
-      }),
+      body: formData,
     });
 
     const responseText = await response.text();

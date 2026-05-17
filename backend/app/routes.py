@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
+import base64
 from sqlalchemy.orm import Session
 import os
 from dotenv import load_dotenv
@@ -92,14 +93,18 @@ async def get_user_profile(user_id: int, db: Session = Depends(get_db)):
     }
 
 @router.put("/users/{user_id}/profile-pic")
-async def update_profile_pic(user_id: int, update_data: UserProfileUpdate, db: Session = Depends(get_db)):
+async def update_profile_pic(user_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı!")
-    
-    user.profile_pic = update_data.profile_pic
+
+    # Dosyayı oku ve base64'e çevirerek DB'ye kaydet
+    contents = await file.read()
+    mime_type = file.content_type or "image/jpeg"
+    b64_str = base64.b64encode(contents).decode("utf-8")
+    user.profile_pic = f"data:{mime_type};base64,{b64_str}"
     db.commit()
-    return {"status": "success", "message": "Profil fotoğrafı başarıyla güncellendi!"}
+    return {"status": "success", "message": "Profil fotoğrafı başarıyla güncellendi!", "profile_pic": user.profile_pic}
 
 
 # ==========================================
