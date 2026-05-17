@@ -46,7 +46,12 @@ export default function LoginScreen() {
 
         // Yarım saniye bekle (kullanıcı "Başarılı" yazısını görsün) ve ana ekrana at
         setTimeout(() => {
-          setUser({ username: extractedUsername, email: email, profilePic: null });
+          setUser({
+            id: result.user_id,           // ← backend'den gelen ID
+            username: extractedUsername,
+            email: email,
+            profilePic: result.profile_pic ?? null, // ← varsa mevcut profil fotoğrafı
+          });
         }, 500);
       } else {
         // Kayıt Ol İşlemi

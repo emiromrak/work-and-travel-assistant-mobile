@@ -7,7 +7,7 @@ import bcrypt
 
 from app.database import get_db
 from app.models import User, Post, Message
-from app.schemas import GuideRequest, UserCreate, UserLogin, PostCreate, MessageCreate
+from app.schemas import GuideRequest, UserCreate, UserLogin, PostCreate, MessageCreate, UserProfileUpdate
 
 # --- DELTA ARAÇLARI ---
 try:
@@ -67,7 +67,39 @@ async def login_user(credentials: UserLogin, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == credentials.email).first()
     if not user or not bcrypt.checkpw(credentials.password.encode('utf-8'), user.hashed_password.encode('utf-8')):
         raise HTTPException(status_code=401, detail="Email veya şifre yanlış!")
-    return {"status": "success", "message": f"Tekrar hoş geldin {user.username}!", "user_id": user.id}
+    return {
+        "status": "success", 
+        "message": f"Tekrar hoş geldin {user.username}!", 
+        "user_id": user.id,
+        "profile_pic": user.profile_pic
+    }
+
+@router.get("/users/{user_id}")
+async def get_user_profile(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı!")
+    return {
+        "status": "success",
+        "data": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "state_city": user.state_city,
+            "job_role": user.job_role,
+            "profile_pic": user.profile_pic
+        }
+    }
+
+@router.put("/users/{user_id}/profile-pic")
+async def update_profile_pic(user_id: int, update_data: UserProfileUpdate, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı!")
+    
+    user.profile_pic = update_data.profile_pic
+    db.commit()
+    return {"status": "success", "message": "Profil fotoğrafı başarıyla güncellendi!"}
 
 
 # ==========================================

@@ -98,3 +98,35 @@ export const fetchRegister = async (username: string, email: string, password: s
     throw error;
   }
 };
+
+// Profil Fotoğrafı Güncelleme API fonksiyonu
+export const updateProfilePicAPI = async (userId: number, base64Image: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/profile-pic`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        profile_pic: base64Image,
+      }),
+    });
+
+    const responseText = await response.text();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      throw new Error(`Sunucu Hatası: ${responseText.substring(0, 50)}...`);
+    }
+
+    if (!response.ok) {
+      throw new Error(data?.detail || 'Profil fotoğrafı güncellenemedi.');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Profil fotoğrafı güncellenirken hata oluştu:', error);
+    throw error;
+  }
+};

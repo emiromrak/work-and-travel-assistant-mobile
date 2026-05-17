@@ -15,6 +15,7 @@ class User(Base):
     # W&T Özel Alanları
     state_city = Column(String, default="Avalon, NJ") # Gideceği yer
     job_role = Column(String, default="Resort Worker") # Mesleği
+    profile_pic = Column(String, nullable=True) # Profil resmi (Base64)
     
     # Kullanıcının attığı gönderilerle (Post) arasındaki bağ
     posts = relationship("Post", back_populates="author")
