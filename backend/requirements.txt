@@ -9,3 +9,5 @@ psycopg2-binary
 requests
 geocoder
 geopy
+supabase    
+python-multipart

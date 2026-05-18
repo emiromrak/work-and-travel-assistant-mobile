@@ -1,5 +1,4 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
-import * as FileSystem from 'expo-file-system';
 import { updateProfilePicAPI } from '../services/api';
 
 interface User {
@@ -20,21 +19,19 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
-  // Galeriden seçilen fotoğrafı base64'e çevirir ve backend'e kaydeder
   const updateProfilePic = async (uri: string) => {
     if (!user) return;
 
-    // 1. URI'yi base64 string'e çevir
-    const base64 = await FileSystem.readAsStringAsync(uri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-
-    // 2. Ekranda hemen göstermek için local state'i güncelle (URI)
+    // 1. Ekranda hemen göstermek için local URI ile state'i güncelle
     setUser({ ...user, profilePic: uri });
 
-    // 3. Backend'e base64 olarak gönder (arka planda)
+    // 2. Backend'e FormData olarak gönder
     try {
-      await updateProfilePicAPI(user.id, `data:image/jpeg;base64,${base64}`);
+      const result = await updateProfilePicAPI(user.id, uri);
+      // Backend'den dönen kalıcı base64 URL ile state'i güncelle
+      if (result?.profile_pic) {
+        setUser((prev) => prev ? { ...prev, profilePic: result.profile_pic } : prev);
+      }
     } catch (error) {
       console.error('Backend profil fotoğrafı kaydedilemedi:', error);
       // Hata olsa bile local görünüm korunur

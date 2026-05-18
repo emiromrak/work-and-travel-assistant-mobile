@@ -53,7 +53,7 @@ export const fetchLogin = async (email: string, password: string) => {
     } catch (e) {
       throw new Error(`Sunucu Hatası: ${responseText.substring(0, 50)}...`);
     }
-    
+
     if (!response.ok) {
       throw new Error(data?.detail || 'Giriş yapılamadı.');
     }
@@ -87,7 +87,7 @@ export const fetchRegister = async (username: string, email: string, password: s
     } catch (e) {
       throw new Error(`Sunucu Hatası: ${responseText.substring(0, 50)}...`);
     }
-    
+
     if (!response.ok) {
       throw new Error(data?.detail || 'Kayıt işlemi başarısız.');
     }
@@ -99,17 +99,24 @@ export const fetchRegister = async (username: string, email: string, password: s
   }
 };
 
-// Profil Fotoğrafı Güncelleme API fonksiyonu
-export const updateProfilePicAPI = async (userId: number, base64Image: string) => {
+// Profil Fotoğrafı Güncelleme API fonksiyonu (FormData ile)
+export const updateProfilePicAPI = async (userId: number, imageUri: string) => {
   try {
+    // FormData ile dosyayı multipart olarak gönder
+    const formData = new FormData();
+    const filename = imageUri.split('/').pop() || 'profile.jpg';
+    const match = /\.(\w+)$/.exec(filename);
+    const mimeType = match ? `image/${match[1]}` : 'image/jpeg';
+
+    formData.append('file', {
+      uri: imageUri,
+      name: filename,
+      type: mimeType,
+    } as any);
+
     const response = await fetch(`${API_BASE_URL}/users/${userId}/profile-pic`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        profile_pic: base64Image,
-      }),
+      body: formData, // headers kısmını tamamen uçurduk!
     });
 
     const responseText = await response.text();
