@@ -1,13 +1,12 @@
 fastapi
 uvicorn
-pydantic
+sqlalchemy
 python-dotenv
+python-multipart
 bcrypt
 groq
-sqlalchemy
-psycopg2-binary
+supabase
 requests
 geocoder
 geopy
-supabase==2.3.5
-python-multipart
+psycopg2-binary

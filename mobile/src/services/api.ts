@@ -1,7 +1,7 @@
 const getBaseUrl = () => {
   // Eğer backend'i Render üzerinde host ediyorsanız, direkt olarak Render URL'inizi buraya yazmalısınız.
   // Örneğin: return 'https://sizin-proje-adiniz.onrender.com/api';
-  return 'https://project-oasis-api-x9tf.onrender.com/api';
+  return 'https://oasis-backend-pro.onrender.com';
 };
 
 export const API_BASE_URL = getBaseUrl();
@@ -103,7 +103,7 @@ export const fetchRegister = async (username: string, email: string, password: s
 export const updateProfilePicAPI = async (userId: number, imageUri: string) => {
   try {
     // FormData ile dosyayı multipart olarak gönder
-    const formData = new FormData();
+    const formData = new For  mData();
     const filename = imageUri.split('/').pop() || 'profile.jpg';
     const match = /\.(\w+)$/.exec(filename);
     const mimeType = match ? `image/${match[1]}` : 'image/jpeg';
