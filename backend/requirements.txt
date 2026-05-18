@@ -9,5 +9,5 @@ psycopg2-binary
 requests
 geocoder
 geopy
-supabase    
+supabase==2.3.5
 python-multipart
