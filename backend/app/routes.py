@@ -44,7 +44,7 @@ router = APIRouter(prefix="/api")
 @router.post("/ai-guide")
 async def get_city_guide(request: GuideRequest):
     if not groq_client: return {"status": "mock", "ai_advice": "🚨 API Key Yok!"}
-    completion = groq_client.chat.completions.create(messages=[{"role": "system", "content": "Sen W&T rehberisin."}, {"role": "user", "content": f"{request.city_name} hakkında {request.topic} tavsiyesi ver."}], model="llama3-8b-8192")
+    completion = groq_client.chat.completions.create(messages=[{"role": "system", "content": "Sen W&T rehberisin."}, {"role": "user", "content": f"{request.city_name} hakkında {request.topic} tavsiyesi ver."}], model="llama-3.1-8b-instant")
     return {"status": "success", "ai_advice": completion.choices[0].message.content}
 
 @router.get("/currency")
@@ -63,6 +63,8 @@ async def get_distance(target_city: str):
 async def register_user(user: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == user.email).first():
         raise HTTPException(status_code=400, detail="Bu email zaten kayıtlı!")
+    if db.query(User).filter(User.username == user.username).first():
+        raise HTTPException(status_code=400, detail="Bu kullanıcı adı zaten alınmış!")
     salt = bcrypt.gensalt()
     hashed_pw = bcrypt.hashpw(user.password.encode('utf-8'), salt).decode('utf-8')
     new_user = User(username=user.username, email=user.email, hashed_password=hashed_pw, state_city=user.state_city, job_role=user.job_role)
