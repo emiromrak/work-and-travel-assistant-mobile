@@ -1,5 +1,7 @@
 const getBaseUrl = () => {
   // Canlı (Production) Render sunucusu:
+  // Eğer backend'i Render üzerinde host ediyorsanız, direkt olarak Render URL'inizi buraya yazmalısınız.
+  // Örneğin: return 'https://sizin-proje-adiniz.onrender.com/api';
   return 'https://oasis-backend-pro.onrender.com/api';
 };
 
@@ -226,21 +228,42 @@ export const fetchPosts = async () => {
   }
 };
 
-// Sosyal Akış: Yeni post paylaşma API'si
-export const createPostAPI = async (postData: { title: string; content: string; user_id: number }) => {
+// Sosyal Akış: Yeni post paylaşma API'si (FormData - Fotoğraf + Konum destekli)
+export const createPostAPI = async (postData: {
+  title: string;
+  content: string;
+  user_id: number;
+  imageUri?: string | null;
+  locationName?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+}) => {
   try {
+    const formData = new FormData();
+    formData.append('user_id', String(postData.user_id));
+    formData.append('title', postData.title);
+    formData.append('content', postData.content);
+
+    if (postData.locationName) formData.append('location_name', postData.locationName);
+    if (postData.lat != null) formData.append('lat', String(postData.lat));
+    if (postData.lng != null) formData.append('lng', String(postData.lng));
+
+    if (postData.imageUri) {
+      const filename = postData.imageUri.split('/').pop() || 'photo.jpg';
+      const match = /\.(\w+)$/.exec(filename);
+      const mimeType = match ? `image/${match[1]}` : 'image/jpeg';
+      formData.append('file', { uri: postData.imageUri, name: filename, type: mimeType } as any);
+    }
+
     const response = await fetch(`${API_BASE_URL}/posts`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(postData),
+      body: formData,
     });
-    if (!response.ok) throw new Error("Gönderi paylaşılamadı");
+    if (!response.ok) throw new Error('Gönderi paylaşılamadı');
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("Gönderi paylaşılırken hata oluştu:", error);
+    console.error('Gönderi paylaşılırken hata oluştu:', error);
     throw error;
   }
 };
@@ -258,21 +281,35 @@ export const fetchConversation = async (user1Id: number, user2Id: number) => {
   }
 };
 
-// Sohbet: Yeni mesaj gönderme API'si
-export const sendMessageAPI = async (messageData: { sender_id: number; receiver_id: number; content: string }) => {
+// Sohbet: Yeni mesaj gönderme API'si (FormData - Fotoğraf destekli)
+export const sendMessageAPI = async (messageData: {
+  sender_id: number;
+  receiver_id: number;
+  content: string;
+  imageUri?: string | null;
+}) => {
   try {
+    const formData = new FormData();
+    formData.append('sender_id', String(messageData.sender_id));
+    formData.append('receiver_id', String(messageData.receiver_id));
+    formData.append('content', messageData.content);
+
+    if (messageData.imageUri) {
+      const filename = messageData.imageUri.split('/').pop() || 'photo.jpg';
+      const match = /\.(\w+)$/.exec(filename);
+      const mimeType = match ? `image/${match[1]}` : 'image/jpeg';
+      formData.append('file', { uri: messageData.imageUri, name: filename, type: mimeType } as any);
+    }
+
     const response = await fetch(`${API_BASE_URL}/messages`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(messageData),
+      body: formData,
     });
-    if (!response.ok) throw new Error("Mesaj gönderilemedi");
+    if (!response.ok) throw new Error('Mesaj gönderilemedi');
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("Mesaj gönderilirken hata oluştu:", error);
+    console.error('Mesaj gönderilirken hata oluştu:', error);
     throw error;
   }
 };

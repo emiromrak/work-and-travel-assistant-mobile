@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from .database import Base
@@ -31,6 +31,12 @@ class Post(Base):
     content = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
     
+    # 📸 Medya & Konum Alanları
+    image_url = Column(String, nullable=True)       # Görselin Supabase public URL'i
+    location_name = Column(String, nullable=True)   # Şehir / yer adı
+    latitude = Column(Float, nullable=True)         # Enlem
+    longitude = Column(Float, nullable=True)        # Boylam
+    
     # Bu gönderiyi hangi kullanıcı attı? (Users tablosundaki ID'ye bağlanır)
     user_id = Column(Integer, ForeignKey("users.id"))
     
@@ -49,4 +55,5 @@ class Message(Base):
     sender_id = Column(Integer, ForeignKey("users.id"))   # Mesajı atan
     receiver_id = Column(Integer, ForeignKey("users.id")) # Mesajı alan
     content = Column(String)                              # Mesajın içeriği
-    timestamp = Column(DateTime, default=datetime.utcnow) # Atılma zamanı    
+    timestamp = Column(DateTime, default=datetime.utcnow) # Atılma zamanı
+    image_url = Column(String, nullable=True)             # 📸 Gönderilen görsel URL'i
