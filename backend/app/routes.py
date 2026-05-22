@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 import base64
 from sqlalchemy.orm import Session
 import os
@@ -198,9 +198,45 @@ async def update_profile_pic(user_id: int, file: UploadFile = File(...), db: Ses
 # 🌍 SOSYAL AĞ API: FLOW (AKIŞ)
 # ==========================================
 @router.post("/posts")
-async def create_post(post: PostCreate, db: Session = Depends(get_db)):
-    if not db.query(User).filter(User.id == post.user_id).first(): raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı!")
-    new_post = Post(title=post.title, content=post.content, user_id=post.user_id)
+async def create_post(
+    user_id: int = Form(...),
+    title: str = Form(...),
+    content: str = Form(...),
+    location_name: str = Form(None),
+    lat: float = Form(None),
+    lng: float = Form(None),
+    file: UploadFile = File(None),
+    db: Session = Depends(get_db)
+):
+    if not db.query(User).filter(User.id == user_id).first():
+        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı!")
+
+    image_url = None
+    if file and file.filename:
+        if not supabase:
+            raise HTTPException(status_code=500, detail="Supabase Storage ayarları eksik!")
+        try:
+            contents = await file.read()
+            file_extension = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+            unique_filename = f"post_{user_id}_{int(time.time())}.{file_extension}"
+            supabase.storage.from_("flow_images").upload(
+                path=unique_filename,
+                file=contents,
+                file_options={"content-type": file.content_type or "image/jpeg"}
+            )
+            image_url = supabase.storage.from_("flow_images").get_public_url(unique_filename)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Fotoğraf yüklenirken hata: {str(e)}")
+
+    new_post = Post(
+        title=title,
+        content=content,
+        user_id=user_id,
+        image_url=image_url,
+        location_name=location_name,
+        latitude=lat,
+        longitude=lng,
+    )
     db.add(new_post)
     db.commit()
     return {"status": "success", "message": "Gönderi paylaşıldı!"}
@@ -217,7 +253,11 @@ async def get_posts(db: Session = Depends(get_db)):
                 "content": p.content, 
                 "user_id": p.user_id,
                 "username": p.author.username if p.author else "Bilinmeyen Kullanıcı",
-                "profile_pic": p.author.profile_pic if p.author else None
+                "profile_pic": p.author.profile_pic if p.author else None,
+                "image_url": p.image_url,
+                "location_name": p.location_name,
+                "latitude": p.latitude,
+                "longitude": p.longitude,
             } for p in posts
         ]
     }
@@ -227,10 +267,34 @@ async def get_posts(db: Session = Depends(get_db)):
 # 💬 SOSYAL AĞ API: DM / MESAJLAŞMA
 # ==========================================
 @router.post("/messages")
-async def send_message(msg: MessageCreate, db: Session = Depends(get_db)):
-    if not db.query(User).filter(User.id == msg.sender_id).first() or not db.query(User).filter(User.id == msg.receiver_id).first():
+async def send_message(
+    sender_id: int = Form(...),
+    receiver_id: int = Form(...),
+    content: str = Form(...),
+    file: UploadFile = File(None),
+    db: Session = Depends(get_db)
+):
+    if not db.query(User).filter(User.id == sender_id).first() or not db.query(User).filter(User.id == receiver_id).first():
         raise HTTPException(status_code=404, detail="Kullanıcılar sistemde bulunamadı!")
-    new_message = Message(sender_id=msg.sender_id, receiver_id=msg.receiver_id, content=msg.content)
+
+    image_url = None
+    if file and file.filename:
+        if not supabase:
+            raise HTTPException(status_code=500, detail="Supabase Storage ayarları eksik!")
+        try:
+            contents = await file.read()
+            file_extension = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+            unique_filename = f"chat_{sender_id}_{int(time.time())}.{file_extension}"
+            supabase.storage.from_("chat_images").upload(
+                path=unique_filename,
+                file=contents,
+                file_options={"content-type": file.content_type or "image/jpeg"}
+            )
+            image_url = supabase.storage.from_("chat_images").get_public_url(unique_filename)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Fotoğraf yüklenirken hata: {str(e)}")
+
+    new_message = Message(sender_id=sender_id, receiver_id=receiver_id, content=content, image_url=image_url)
     db.add(new_message)
     db.commit()
     return {"status": "success", "message": "Mesaj iletildi! 🚀"}
@@ -240,4 +304,4 @@ async def get_conversation(user1_id: int, user2_id: int, db: Session = Depends(g
     messages = db.query(Message).filter(
         ((Message.sender_id == user1_id) & (Message.receiver_id == user2_id)) | ((Message.sender_id == user2_id) & (Message.receiver_id == user1_id))
     ).order_by(Message.id.asc()).all()
-    return {"status": "success", "data": [{"id": m.id, "sender_id": m.sender_id, "receiver_id": m.receiver_id, "content": m.content} for m in messages]}
+    return {"status": "success", "data": [{"id": m.id, "sender_id": m.sender_id, "receiver_id": m.receiver_id, "content": m.content, "image_url": m.image_url} for m in messages]}
