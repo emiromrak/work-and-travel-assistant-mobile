@@ -8,13 +8,14 @@ interface User {
   profilePic: string | null;
   stateCity?: string;
   jobRole?: string;
+  startCity?: string;
 }
 
 interface UserContextType {
   user: User | null;
   setUser: (user: User | null) => void;
   updateProfilePic: (uri: string) => Promise<void>;
-  updateUserProfile: (stateCity: string, jobRole: string) => Promise<void>;
+  updateUserProfile: (stateCity: string, jobRole: string, startCity: string) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -41,15 +42,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateUserProfile = async (stateCity: string, jobRole: string) => {
+  const updateUserProfile = async (stateCity: string, jobRole: string, startCity: string) => {
     if (!user) return;
 
     // 1. Ekranda hemen güncelle
-    setUser({ ...user, stateCity, jobRole });
+    setUser({ ...user, stateCity, jobRole, startCity });
 
     // 2. Backend'e gönder
     try {
-      await updateUserProfileAPI(user.id, { state_city: stateCity, job_role: jobRole });
+      await updateUserProfileAPI(user.id, { state_city: stateCity, job_role: jobRole, start_city: startCity });
     } catch (error) {
       console.error('Backend profil bilgileri güncellenemedi:', error);
     }

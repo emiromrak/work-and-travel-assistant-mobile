@@ -13,11 +13,13 @@ export default function ProfileScreen() {
   const [saving, setSaving] = useState(false);
   const [stateCity, setStateCity] = useState(user?.stateCity ?? '');
   const [jobRole, setJobRole] = useState(user?.jobRole ?? '');
+  const [startCity, setStartCity] = useState(user?.startCity ?? '');
 
   useEffect(() => {
     if (user) {
       setStateCity(user.stateCity ?? '');
       setJobRole(user.jobRole ?? '');
+      setStartCity(user.startCity ?? '');
     }
   }, [user?.id]);
 
@@ -52,7 +54,7 @@ export default function ProfileScreen() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateUserProfile(stateCity, jobRole);
+      await updateUserProfile(stateCity, jobRole, startCity);
       Alert.alert('Başarılı', 'Profil bilgileriniz kaydedildi!');
     } catch (e) {
       Alert.alert('Hata', 'Bilgiler güncellenirken bir sorun oluştu.');
@@ -124,6 +126,21 @@ export default function ProfileScreen() {
                   value={stateCity}
                   onChangeText={setStateCity}
                   placeholder="Örn: Orlando, FL"
+                  placeholderTextColor="#BBE1FA40"
+                  style={{ color: '#BBE1FA', fontSize: 16 }}
+                />
+              </View>
+            </View>
+
+            <View className="h-[1px] bg-[#3282B830] my-2" />
+
+            <View>
+              <Text className="text-text-light opacity-60 text-xs mb-1 uppercase tracking-wider font-bold">Uçuş Başlangıç Şehri (Hometown)</Text>
+              <View className="bg-bg-dark rounded-xl px-3 py-2 border border-[#3282B830] mt-1">
+                <TextInput
+                  value={startCity}
+                  onChangeText={setStartCity}
+                  placeholder="Örn: İstanbul, TR"
                   placeholderTextColor="#BBE1FA40"
                   style={{ color: '#BBE1FA', fontSize: 16 }}
                 />

@@ -16,6 +16,8 @@ class User(Base):
     state_city = Column(String, default="Avalon, NJ") # Gideceği yer
     job_role = Column(String, default="Resort Worker") # Mesleği
     profile_pic = Column(String, nullable=True) # Profil resmi (Base64)
+    start_city = Column(String, default="Istanbul, TR") # Başlangıç şehri
+    
     
     # Kullanıcının attığı gönderilerle (Post) arasındaki bağ
     posts = relationship("Post", back_populates="author")

@@ -4,8 +4,17 @@ from fastapi.responses import HTMLResponse
 # --- 1. VERİTABANI VE MODELLER ---
 from app.database import engine
 from app.models import Base
+from sqlalchemy import text
 
 Base.metadata.create_all(bind=engine)
+
+# Auto-migration: users tablosuna start_city sütununu ekle (yoksa)
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE users ADD COLUMN start_city VARCHAR DEFAULT 'Istanbul, TR'"))
+        conn.commit()
+except Exception as e:
+    pass
 
 # --- 2. UYGULAMA AYARLARI ---
 app = FastAPI(title="Mali's Journey API", version="1.0.0")

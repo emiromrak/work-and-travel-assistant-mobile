@@ -53,6 +53,7 @@ export default function LoginScreen() {
             profilePic: result.profile_pic ?? null, // ← varsa mevcut profil fotoğrafı
             stateCity: result.state_city ?? '',
             jobRole: result.job_role ?? '',
+            startCity: result.start_city ?? '',
           });
         }, 500);
       } else {

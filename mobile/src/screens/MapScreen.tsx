@@ -10,9 +10,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
-import { MOCK_FLIGHTS, NEAREST_AIRPORTS } from "../data/mockFlights";
+import { AIRPORTS_BY_CITY, FLIGHTS_BY_CITY } from "../data/mockFlights";
 import { CITY_GUIDES } from "../data/mockGuides";
 import { fetchDistance } from "../services/api";
+import { useUser } from "../context/UserContext";
 
 const { width } = Dimensions.get("window");
 
@@ -33,7 +34,22 @@ interface DistanceInfo {
 }
 
 export default function MapScreen() {
+  const { user } = useUser();
   const [selectedCityId, setSelectedCityId] = useState("orlando");
+
+  useEffect(() => {
+    if (user?.stateCity) {
+      const userCityLower = user.stateCity.toLowerCase();
+      const found = CITIES.find((c) => 
+        userCityLower.includes(c.id) || 
+        userCityLower.includes(c.name.split(',')[0].toLowerCase().trim())
+      );
+      if (found) {
+        setSelectedCityId(found.id);
+      }
+    }
+  }, [user?.stateCity]);
+
   const selectedCity = CITIES.find((c) => c.id === selectedCityId) ?? CITIES[0];
   const guide = CITY_GUIDES.find((g) => g.id === selectedCityId);
 
@@ -45,7 +61,7 @@ export default function MapScreen() {
     const getDistanceInfo = async () => {
       setLoadingDistance(true);
       try {
-        const data = await fetchDistance(selectedCity.name);
+        const data = await fetchDistance(selectedCity.name, user?.startCity);
         if (active && data) {
           setDistanceInfo(data);
         }
@@ -61,7 +77,10 @@ export default function MapScreen() {
     return () => {
       active = false;
     };
-  }, [selectedCityId]);
+  }, [selectedCityId, user?.startCity]);
+
+  const airports = AIRPORTS_BY_CITY[selectedCityId] || [];
+  const flights = FLIGHTS_BY_CITY[selectedCityId] || [];
 
   const mapLat = distanceInfo?.hedef_koor ? distanceInfo.hedef_koor[0] : selectedCity.lat;
   const mapLng = distanceInfo?.hedef_koor ? distanceInfo.hedef_koor[1] : selectedCity.lng;
@@ -150,7 +169,7 @@ export default function MapScreen() {
             />
 
             {/* Airport markers */}
-            {NEAREST_AIRPORTS.map((airport) => (
+            {airports.map((airport) => (
               <Marker
                 key={airport.id}
                 coordinate={{ latitude: airport.latitude, longitude: airport.longitude }}
@@ -209,7 +228,7 @@ export default function MapScreen() {
             <Text className="text-xl">🛫</Text>
             <Text className="text-text-light font-bold text-base">En Yakın Havalimanı</Text>
           </View>
-          {NEAREST_AIRPORTS.map((airport) => (
+          {airports.map((airport) => (
             <View
               key={airport.id}
               className="flex-row items-center justify-between py-2"
@@ -253,7 +272,7 @@ export default function MapScreen() {
             </View>
           </View>
 
-          {MOCK_FLIGHTS.map((flight, index) => (
+          {flights.map((flight, index) => (
             <View
               key={flight.id}
               className="rounded-2xl bg-bg-card p-4 mb-3"
@@ -300,7 +319,7 @@ export default function MapScreen() {
               <View className="flex-row items-center justify-between">
                 <View className="items-center">
                   <Text className="text-text-light font-bold text-base">{flight.departure}</Text>
-                  <Text className="text-text-light opacity-50 text-xs">IST</Text>
+                  <Text className="text-text-light opacity-50 text-xs">{flight.fromCode || "IST"}</Text>
                 </View>
 
                 <View className="flex-1 items-center px-3">
@@ -315,7 +334,7 @@ export default function MapScreen() {
 
                 <View className="items-center">
                   <Text className="text-text-light font-bold text-base">{flight.arrival}</Text>
-                  <Text className="text-text-light opacity-50 text-xs">MCO</Text>
+                  <Text className="text-text-light opacity-50 text-xs">{flight.toCode || "MCO"}</Text>
                 </View>
               </View>
 

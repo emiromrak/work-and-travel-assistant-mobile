@@ -151,9 +151,13 @@ export const fetchExchangeRate = async () => {
 };
 
 // Mesafe ve koordinat bulma API'si
-export const fetchDistance = async (targetCity: string) => {
+export const fetchDistance = async (targetCity: string, myCity?: string) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/distance?target_city=${encodeURIComponent(targetCity)}`);
+    let url = `${API_BASE_URL}/distance?target_city=${encodeURIComponent(targetCity)}`;
+    if (myCity) {
+      url += `&my_city=${encodeURIComponent(myCity)}`;
+    }
+    const response = await fetch(url);
     if (!response.ok) throw new Error("Mesafe hesaplanamadı");
     const data = await response.json();
     return data;
@@ -176,8 +180,8 @@ export const fetchUsers = async () => {
   }
 };
 
-// Profil Güncelleme API'si (Eyalet & Rol)
-export const updateUserProfileAPI = async (userId: number, profileData: { state_city?: string, job_role?: string }) => {
+// Profil Güncelleme API'si (Eyalet & Rol & Başlangıç Şehri)
+export const updateUserProfileAPI = async (userId: number, profileData: { state_city?: string, job_role?: string, start_city?: string }) => {
   try {
     const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
       method: 'PUT',

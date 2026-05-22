@@ -53,8 +53,8 @@ async def get_currency(miktar: float = 1, yon: str = "USD_TO_TRY"):
     return {"status": "success", "calculated_amount": para_cevir(miktar, dolar_kuru_cek(), yon)}
 
 @router.get("/distance")
-async def get_distance(target_city: str):
-    return mesafe_ve_koordinat_bul(target_city)
+async def get_distance(target_city: str, my_city: str = None):
+    return mesafe_ve_koordinat_bul(target_city, my_city)
 
 
 # ==========================================
@@ -68,7 +68,7 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Bu kullanıcı adı zaten alınmış!")
     salt = bcrypt.gensalt()
     hashed_pw = bcrypt.hashpw(user.password.encode('utf-8'), salt).decode('utf-8')
-    new_user = User(username=user.username, email=user.email, hashed_password=hashed_pw, state_city=user.state_city, job_role=user.job_role)
+    new_user = User(username=user.username, email=user.email, hashed_password=hashed_pw, state_city=user.state_city, job_role=user.job_role, start_city=user.start_city)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -85,7 +85,8 @@ async def login_user(credentials: UserLogin, db: Session = Depends(get_db)):
         "user_id": user.id,
         "profile_pic": user.profile_pic,
         "state_city": user.state_city,
-        "job_role": user.job_role
+        "job_role": user.job_role,
+        "start_city": user.start_city
     }
 
 @router.get("/users/{user_id}")
@@ -134,6 +135,8 @@ async def update_user_profile(user_id: int, profile: UserProfileUpdate, db: Sess
         user.job_role = profile.job_role
     if profile.profile_pic is not None:
         user.profile_pic = profile.profile_pic
+    if profile.start_city is not None:
+        user.start_city = profile.start_city
         
     db.commit()
     db.refresh(user)
@@ -146,7 +149,8 @@ async def update_user_profile(user_id: int, profile: UserProfileUpdate, db: Sess
             "email": user.email,
             "state_city": user.state_city,
             "job_role": user.job_role,
-            "profile_pic": user.profile_pic
+            "profile_pic": user.profile_pic,
+            "start_city": user.start_city
         }
     }
 

@@ -6,3 +6,7 @@ venv/
 
 # Veritabanı
 app.db
+
+.vscode/
+__pycache__/
+*.pyc
