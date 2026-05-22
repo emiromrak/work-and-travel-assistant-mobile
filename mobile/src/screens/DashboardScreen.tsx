@@ -15,10 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { TIMEZONES } from "../data/timezones";
 import { useNavigation } from "@react-navigation/native";
 import { useUser } from "../context/UserContext";
-
-// ─── Mock exchange rate ───────────────────────────────────────────────────────
-const MOCK_USD_TRY = 38.42;
-const MOCK_UPDATED = "16 Mayıs 2025, 22:00";
+import { fetchExchangeRate } from "../services/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface TimeData {
@@ -78,6 +75,39 @@ export default function DashboardScreen() {
   const [flightDateInput, setFlightDateInput] = useState(defaultDateStr);
   const [flightDate, setFlightDate] = useState(defaultFlightDate);
   const [dateError, setDateError] = useState("");
+
+  const [usdTry, setUsdTry] = useState<number>(38.42);
+  const [updatedTime, setUpdatedTime] = useState<string>("Yükleniyor...");
+  const [liveStatus, setLiveStatus] = useState<string>("CANLI (Mock)");
+
+  useEffect(() => {
+    const loadRate = async () => {
+      try {
+        const res = await fetchExchangeRate();
+        if (res && res.status === "success") {
+          const val = parseFloat(res.calculated_amount.replace(" TL", ""));
+          if (!isNaN(val)) {
+            setUsdTry(val);
+            setLiveStatus("CANLI");
+            const now = new Date();
+            setUpdatedTime(
+              now.toLocaleString("tr-TR", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            );
+          }
+        }
+      } catch (e) {
+        console.error("Döviz kuru yüklenemedi:", e);
+        setUpdatedTime("16 Mayıs 2025, 22:00");
+      }
+    };
+    loadRate();
+  }, []);
 
   // Live clock — updates every second
   useEffect(() => {
@@ -143,11 +173,11 @@ export default function DashboardScreen() {
               <Text className="text-text-light font-bold text-base">USD / TRY</Text>
             </View>
             <View className="bg-brand-primary rounded-full px-3 py-1">
-              <Text className="text-text-light text-xs font-semibold">CANLI (Mock)</Text>
+              <Text className="text-text-light text-xs font-semibold">{liveStatus}</Text>
             </View>
           </View>
           <Text className="text-text-light text-4xl font-bold tracking-wider">
-            ₺ {MOCK_USD_TRY.toFixed(2)}
+            ₺ {usdTry.toFixed(2)}
           </Text>
           <View className="flex-row items-center mt-2 gap-1">
             <Ionicons name="trending-up" size={14} color="#4ade80" />
@@ -156,7 +186,7 @@ export default function DashboardScreen() {
             </Text>
           </View>
           <Text className="text-text-light opacity-40 text-xs mt-2">
-            Son güncelleme: {MOCK_UPDATED}
+            Son güncelleme: {updatedTime}
           </Text>
         </View>
 

@@ -145,12 +145,24 @@ def onerileri_getir(metin):
     try: return [y.address for y in Nominatim(user_agent="travel_assistant_v1").geocode(metin, exactly_one=False, limit=5, country_codes="us") or []]
     except: return []
 
-def mesafe_ve_koordinat_bul(hedef):
+def mesafe_ve_koordinat_bul(hedef, benim_sehir_adi=None):
     try:
-        g = geocoder.ip('me')
-        b_koor = tuple(g.latlng) if g.latlng else (37.84, 27.84)
+        if benim_sehir_adi:
+            b = Nominatim(user_agent="travel_assistant_v1").geocode(benim_sehir_adi)
+            if b:
+                b_koor = (b.latitude, b.longitude)
+                b_sehir = b.address.split(",")[0]
+            else:
+                g = geocoder.ip('me')
+                b_koor = tuple(g.latlng) if g.latlng else (37.84, 27.84)
+                b_sehir = g.city or "Istanbul"
+        else:
+            g = geocoder.ip('me')
+            b_koor = tuple(g.latlng) if g.latlng else (37.84, 27.84)
+            b_sehir = g.city or "Istanbul"
+
         h = Nominatim(user_agent="travel_assistant_v1").geocode(hedef)
-        if h: return {"durum": True, "mesafe": f"{geodesic(b_koor, (h.latitude, h.longitude)).kilometers:.0f}", "benim_koor": b_koor, "hedef_koor": (h.latitude, h.longitude), "benim_sehir": g.city or "Istanbul"}
+        if h: return {"durum": True, "mesafe": f"{geodesic(b_koor, (h.latitude, h.longitude)).kilometers:.0f}", "benim_koor": b_koor, "hedef_koor": (h.latitude, h.longitude), "benim_sehir": b_sehir, "hedef_sehir": h.address.split(",")[0]}
         return {"durum": False}
     except: return {"durum": False}
 

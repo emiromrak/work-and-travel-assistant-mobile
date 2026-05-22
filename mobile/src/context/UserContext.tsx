@@ -1,17 +1,20 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
-import { updateProfilePicAPI } from '../services/api';
+import { updateProfilePicAPI, updateUserProfileAPI } from '../services/api';
 
 interface User {
   id: number;        // ← backend'deki user_id
   username: string;
   email: string;
   profilePic: string | null;
+  stateCity?: string;
+  jobRole?: string;
 }
 
 interface UserContextType {
   user: User | null;
   setUser: (user: User | null) => void;
   updateProfilePic: (uri: string) => Promise<void>;
+  updateUserProfile: (stateCity: string, jobRole: string) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -38,8 +41,22 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateUserProfile = async (stateCity: string, jobRole: string) => {
+    if (!user) return;
+
+    // 1. Ekranda hemen güncelle
+    setUser({ ...user, stateCity, jobRole });
+
+    // 2. Backend'e gönder
+    try {
+      await updateUserProfileAPI(user.id, { state_city: stateCity, job_role: jobRole });
+    } catch (error) {
+      console.error('Backend profil bilgileri güncellenemedi:', error);
+    }
+  };
+
   return (
-    <UserContext.Provider value={{ user, setUser, updateProfilePic }}>
+    <UserContext.Provider value={{ user, setUser, updateProfilePic, updateUserProfile }}>
       {children}
     </UserContext.Provider>
   );

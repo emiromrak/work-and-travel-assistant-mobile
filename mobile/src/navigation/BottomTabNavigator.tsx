@@ -7,6 +7,8 @@ import DashboardScreen from "../screens/DashboardScreen";
 import BudgetScreen from "../screens/BudgetScreen";
 import MapScreen from "../screens/MapScreen";
 import GuideScreen from "../screens/GuideScreen";
+import SocialScreen from "../screens/SocialScreen";
+import ChatListScreen from "../screens/ChatListScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -44,6 +46,10 @@ export default function BottomTabNavigator() {
 
           if (route.name === "Dashboard") {
             iconName = focused ? "home" : "home-outline";
+          } else if (route.name === "Social") {
+            iconName = focused ? "share-social" : "share-social-outline";
+          } else if (route.name === "Chat") {
+            iconName = focused ? "chatbubble-ellipses" : "chatbubble-ellipses-outline";
           } else if (route.name === "Budget") {
             iconName = focused ? "calculator" : "calculator-outline";
           } else if (route.name === "Map") {
@@ -60,6 +66,16 @@ export default function BottomTabNavigator() {
         name="Dashboard"
         component={DashboardScreen}
         options={{ tabBarLabel: "Ana Sayfa" }}
+      />
+      <Tab.Screen
+        name="Social"
+        component={SocialScreen}
+        options={{ tabBarLabel: "Sosyal" }}
+      />
+      <Tab.Screen
+        name="Chat"
+        component={ChatListScreen}
+        options={{ tabBarLabel: "Sohbet" }}
       />
       <Tab.Screen
         name="Budget"

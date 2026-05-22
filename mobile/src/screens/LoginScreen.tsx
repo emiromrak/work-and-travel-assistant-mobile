@@ -51,6 +51,8 @@ export default function LoginScreen() {
             username: extractedUsername,
             email: email,
             profilePic: result.profile_pic ?? null, // ← varsa mevcut profil fotoğrafı
+            stateCity: result.state_city ?? '',
+            jobRole: result.job_role ?? '',
           });
         }, 500);
       } else {

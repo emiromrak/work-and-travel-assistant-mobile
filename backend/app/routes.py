@@ -83,7 +83,9 @@ async def login_user(credentials: UserLogin, db: Session = Depends(get_db)):
         "status": "success", 
         "message": f"Tekrar hoş geldin {user.username}!", 
         "user_id": user.id,
-        "profile_pic": user.profile_pic
+        "profile_pic": user.profile_pic,
+        "state_city": user.state_city,
+        "job_role": user.job_role
     }
 
 @router.get("/users/{user_id}")
@@ -93,6 +95,51 @@ async def get_user_profile(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı!")
     return {
         "status": "success",
+        "data": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "state_city": user.state_city,
+            "job_role": user.job_role,
+            "profile_pic": user.profile_pic
+        }
+    }
+
+@router.get("/users")
+async def list_users(db: Session = Depends(get_db)):
+    users = db.query(User).all()
+    return {
+        "status": "success",
+        "data": [
+            {
+                "id": u.id,
+                "username": u.username,
+                "email": u.email,
+                "state_city": u.state_city,
+                "job_role": u.job_role,
+                "profile_pic": u.profile_pic
+            } for u in users
+        ]
+    }
+
+@router.put("/users/{user_id}")
+async def update_user_profile(user_id: int, profile: UserProfileUpdate, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı!")
+    
+    if profile.state_city is not None:
+        user.state_city = profile.state_city
+    if profile.job_role is not None:
+        user.job_role = profile.job_role
+    if profile.profile_pic is not None:
+        user.profile_pic = profile.profile_pic
+        
+    db.commit()
+    db.refresh(user)
+    return {
+        "status": "success",
+        "message": "Profil bilgileri güncellendi!",
         "data": {
             "id": user.id,
             "username": user.username,
@@ -148,7 +195,19 @@ async def create_post(post: PostCreate, db: Session = Depends(get_db)):
 @router.get("/posts")
 async def get_posts(db: Session = Depends(get_db)):
     posts = db.query(Post).order_by(Post.id.desc()).all()
-    return {"status": "success", "data": [{"id": p.id, "title": p.title, "content": p.content, "user_id": p.user_id} for p in posts]}
+    return {
+        "status": "success", 
+        "data": [
+            {
+                "id": p.id, 
+                "title": p.title, 
+                "content": p.content, 
+                "user_id": p.user_id,
+                "username": p.author.username if p.author else "Bilinmeyen Kullanıcı",
+                "profile_pic": p.author.profile_pic if p.author else None
+            } for p in posts
+        ]
+    }
 
 
 # ==========================================

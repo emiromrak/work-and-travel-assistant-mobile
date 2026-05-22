@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { fetchExchangeRate } from "../services/api";
 
 interface Job {
   id: string;
@@ -20,16 +21,16 @@ interface Job {
 const WEEKS_PER_MONTH = 4.33;
 const DEFAULT_TAX = "12";
 const DEFAULT_EXPENSE = "900";
-const USD_TRY = 38.42;
 
 function formatUSD(n: number) {
   return `$${n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 }
-function formatTRY(n: number) {
-  return `₺${(n * USD_TRY).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+function formatTRY(n: number, rate: number) {
+  return `₺${(n * rate).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 }
 
 export default function BudgetScreen() {
+  const [usdTry, setUsdTry] = useState<number>(38.42);
   const [jobs, setJobs] = useState<Job[]>([
     { id: "1", label: "İş 1", hourlyWage: "15", weeklyHours: "40" },
   ]);
@@ -40,6 +41,23 @@ export default function BudgetScreen() {
   const [grossMonthly, setGrossMonthly] = useState(0);
   const [netMonthly, setNetMonthly] = useState(0);
   const [threeMonthSavings, setThreeMonthSavings] = useState(0);
+
+  useEffect(() => {
+    const loadRate = async () => {
+      try {
+        const res = await fetchExchangeRate();
+        if (res && res.status === "success") {
+          const val = parseFloat(res.calculated_amount.replace(" TL", ""));
+          if (!isNaN(val)) {
+            setUsdTry(val);
+          }
+        }
+      } catch (e) {
+        console.error("Döviz kuru yüklenemedi:", e);
+      }
+    };
+    loadRate();
+  }, []);
 
   useEffect(() => {
     const taxFraction = Math.min(parseFloat(taxRate) || 0, 100) / 100;
@@ -323,7 +341,7 @@ export default function BudgetScreen() {
                 marginTop: 4,
               }}
             >
-              ≈ {formatTRY(threeMonthSavings)} (1$ = ₺{USD_TRY})
+              ≈ {formatTRY(threeMonthSavings, usdTry)} (1$ = ₺{usdTry.toFixed(2)})
             </Text>
             {!isPositive && (
               <Text

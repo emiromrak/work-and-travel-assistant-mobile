@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import BottomTabNavigator from './BottomTabNavigator';
 import ProfileScreen from '../screens/ProfileScreen';
+import ChatDetailScreen from '../screens/ChatDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -14,6 +15,14 @@ export default function AppNavigator() {
       <Stack.Screen 
         name="Profile" 
         component={ProfileScreen} 
+        options={{ 
+          animation: 'slide_from_right' 
+        }} 
+      />
+      {/* Sohbet Detay Ekranı */}
+      <Stack.Screen 
+        name="ChatDetail" 
+        component={ChatDetailScreen} 
         options={{ 
           animation: 'slide_from_right' 
         }} 

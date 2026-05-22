@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { MOCK_FLIGHTS, NEAREST_AIRPORTS } from "../data/mockFlights";
 import { CITY_GUIDES } from "../data/mockGuides";
+import { fetchDistance } from "../services/api";
 
 const { width } = Dimensions.get("window");
 
@@ -23,10 +24,47 @@ const CITIES = [
   { id: "chicago", name: "Chicago, IL", lat: 41.8781, lng: -87.6298 },
 ];
 
+interface DistanceInfo {
+  durum: boolean;
+  mesafe?: string;
+  benim_sehir?: string;
+  hedef_koor?: [number, number];
+  benim_koor?: [number, number];
+}
+
 export default function MapScreen() {
   const [selectedCityId, setSelectedCityId] = useState("orlando");
   const selectedCity = CITIES.find((c) => c.id === selectedCityId) ?? CITIES[0];
   const guide = CITY_GUIDES.find((g) => g.id === selectedCityId);
+
+  const [distanceInfo, setDistanceInfo] = useState<DistanceInfo | null>(null);
+  const [loadingDistance, setLoadingDistance] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const getDistanceInfo = async () => {
+      setLoadingDistance(true);
+      try {
+        const data = await fetchDistance(selectedCity.name);
+        if (active && data) {
+          setDistanceInfo(data);
+        }
+      } catch (error) {
+        console.error("Mesafe bilgisi çekilirken hata:", error);
+      } finally {
+        if (active) {
+          setLoadingDistance(false);
+        }
+      }
+    };
+    getDistanceInfo();
+    return () => {
+      active = false;
+    };
+  }, [selectedCityId]);
+
+  const mapLat = distanceInfo?.hedef_koor ? distanceInfo.hedef_koor[0] : selectedCity.lat;
+  const mapLng = distanceInfo?.hedef_koor ? distanceInfo.hedef_koor[1] : selectedCity.lng;
 
   return (
     <SafeAreaView className="flex-1 bg-bg-dark">
@@ -96,8 +134,8 @@ export default function MapScreen() {
             provider={PROVIDER_DEFAULT}
             style={{ flex: 1 }}
             region={{
-              latitude: selectedCity.lat,
-              longitude: selectedCity.lng,
+              latitude: mapLat,
+              longitude: mapLng,
               latitudeDelta: 0.4,
               longitudeDelta: 0.4,
             }}
@@ -105,7 +143,7 @@ export default function MapScreen() {
           >
             {/* City center marker */}
             <Marker
-              coordinate={{ latitude: selectedCity.lat, longitude: selectedCity.lng }}
+              coordinate={{ latitude: mapLat, longitude: mapLng }}
               title={selectedCity.name}
               description="Hedef şehir"
               pinColor="#3282B8"
@@ -123,6 +161,47 @@ export default function MapScreen() {
             ))}
           </MapView>
         </View>
+
+        {/* Mesafe Bilgisi Kartı */}
+        {loadingDistance ? (
+          <View className="mx-5 mt-4 rounded-2xl bg-bg-card p-4 items-center justify-center border border-brand-primary/20">
+            <Text className="text-text-light opacity-60 text-sm">Mesafe hesaplanıyor...</Text>
+          </View>
+        ) : distanceInfo?.durum ? (
+          <View className="mx-5 mt-4 rounded-2xl bg-bg-card p-4 border border-brand-primary/30">
+            <View className="flex-row items-center gap-2 mb-3">
+              <Ionicons name="navigate-circle-outline" size={22} color="#3282B8" />
+              <Text className="text-text-light font-bold text-base">Uzaklık & Konum</Text>
+            </View>
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1">
+                <Text className="text-text-light opacity-60 text-xs uppercase tracking-wider">
+                  Bulunduğunuz Şehir
+                </Text>
+                <Text className="text-text-light font-semibold text-sm mt-0.5">
+                  {distanceInfo.benim_sehir || "Belirlenemedi"}
+                </Text>
+              </View>
+              
+              <View className="px-4 items-center justify-center">
+                <Ionicons name="airplane-outline" size={18} color="#BBE1FA" />
+                <View style={{ height: 1, width: 60, backgroundColor: "#3282B860", marginVertical: 4 }} />
+                <Text className="text-brand-primary font-bold text-xs">
+                  {distanceInfo.mesafe} km
+                </Text>
+              </View>
+
+              <View className="flex-1 items-end">
+                <Text className="text-text-light opacity-60 text-xs uppercase tracking-wider">
+                  Hedef Şehir
+                </Text>
+                <Text className="text-text-light font-semibold text-sm mt-0.5 text-right">
+                  {selectedCity.name}
+                </Text>
+              </View>
+            </View>
+          </View>
+        ) : null}
 
         {/* Nearest Airport Info */}
         <View className="mx-5 mt-4 rounded-2xl bg-bg-card p-4">
