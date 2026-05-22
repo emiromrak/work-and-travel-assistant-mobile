@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, ActivityIndicator, Alert, TextInput, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  TextInput,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useUser } from '../context/UserContext';
 import { useNavigation } from '@react-navigation/native';
+import CitySearchInput from '../components/CitySearchInput';
 
 export default function ProfileScreen() {
   const { user, setUser, updateProfilePic, updateUserProfile } = useUser();
@@ -23,34 +34,87 @@ export default function ProfileScreen() {
     }
   }, [user?.id]);
 
-  const pickImage = async () => {
+  // ── Fotoğraf seçimi ───────────────────────────────────────────────────────────
+  const handlePickFromGallery = async () => {
     // Galeri izni iste
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('İzin Gerekli', 'Fotoğraf seçmek için galeri iznine ihtiyaç var.');
+      Alert.alert(
+        'Galeri İzni Gerekli',
+        'Fotoğraf seçmek için galeri iznine ihtiyaç var. Ayarlardan izin verebilirsiniz.',
+        [{ text: 'Tamam' }]
+      );
       return;
     }
 
-    // Galeriden fotoğraf seç
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.5,
+      quality: 0.6,
     });
 
-    if (!result.canceled) {
-      setLoading(true);
-      try {
-        await updateProfilePic(result.assets[0].uri);
-      } catch (e) {
-        Alert.alert('Hata', 'Fotoğraf yüklenirken bir sorun oluştu.');
-      } finally {
-        setLoading(false);
-      }
+    if (!result.canceled && result.assets[0]) {
+      await uploadPhoto(result.assets[0].uri);
     }
   };
 
+  const handlePickFromCamera = async () => {
+    // Kamera izni iste
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Kamera İzni Gerekli',
+        'Fotoğraf çekmek için kamera iznine ihtiyaç var. Ayarlardan izin verebilirsiniz.',
+        [{ text: 'Tamam' }]
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.6,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      await uploadPhoto(result.assets[0].uri);
+    }
+  };
+
+  const uploadPhoto = async (uri: string) => {
+    setLoading(true);
+    try {
+      await updateProfilePic(uri);
+    } catch (e) {
+      Alert.alert('Hata', 'Fotoğraf yüklenirken bir sorun oluştu.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const pickImage = () => {
+    Alert.alert(
+      'Profil Fotoğrafı',
+      'Fotoğrafı nereden yüklemek istersiniz?',
+      [
+        {
+          text: '📷 Kamera',
+          onPress: handlePickFromCamera,
+        },
+        {
+          text: '🖼️ Galeri',
+          onPress: handlePickFromGallery,
+        },
+        {
+          text: 'İptal',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
+
+  // ── Kaydet ────────────────────────────────────────────────────────────────────
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -70,124 +134,206 @@ export default function ProfileScreen() {
   if (!user) return null;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-dark">
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#1B262C' }}>
       {/* Header */}
-      <View className="px-5 py-4 flex-row items-center border-b border-[#3282B830] bg-bg-dark">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
+      <View
+        style={{
+          paddingHorizontal: 20,
+          paddingVertical: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          borderBottomWidth: 1,
+          borderBottomColor: '#3282B830',
+        }}
+      >
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 16 }}>
           <Ionicons name="arrow-back" size={24} color="#BBE1FA" />
         </TouchableOpacity>
-        <Text className="text-text-light text-xl font-bold flex-1">Profilim</Text>
+        <Text style={{ color: '#BBE1FA', fontSize: 20, fontWeight: '800', flex: 1 }}>Profilim</Text>
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 20 }} keyboardShouldPersistTaps="handled">
-        <View className="items-center">
-          {/* Profil Resmi */}
-          <TouchableOpacity onPress={pickImage} className="relative mb-8" disabled={loading}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 20, paddingBottom: 40 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* ── Profil Fotoğrafı ─────────────────────────────────────────────── */}
+        <View style={{ alignItems: 'center', marginBottom: 28 }}>
+          <TouchableOpacity onPress={pickImage} disabled={loading} style={{ position: 'relative' }}>
             {user.profilePic ? (
               <Image
                 source={{ uri: user.profilePic }}
                 style={{ width: 120, height: 120, borderRadius: 60, borderWidth: 3, borderColor: '#3282B8' }}
               />
             ) : (
-              <View style={{ width: 120, height: 120, borderRadius: 60, backgroundColor: '#0F4C75', justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: '#3282B8' }}>
-                <Ionicons name="person" size={60} color="#BBE1FA80" />
+              <View
+                style={{
+                  width: 120,
+                  height: 120,
+                  borderRadius: 60,
+                  backgroundColor: '#0F4C75',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  borderWidth: 3,
+                  borderColor: '#3282B8',
+                }}
+              >
+                <Ionicons name="person" size={56} color="#BBE1FA50" />
               </View>
             )}
 
-            {/* Kamera ikonu veya yükleme göstergesi */}
-            <View className="absolute bottom-0 right-0 bg-brand-primary w-10 h-10 rounded-full items-center justify-center border-4 border-bg-dark">
-              {loading
-                ? <ActivityIndicator size="small" color="#BBE1FA" />
-                : <Ionicons name="camera" size={18} color="#BBE1FA" />
-              }
+            {/* Kamera ikonu */}
+            <View
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                backgroundColor: '#3282B8',
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 3,
+                borderColor: '#1B262C',
+              }}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#BBE1FA" />
+              ) : (
+                <Ionicons name="camera" size={16} color="#BBE1FA" />
+              )}
             </View>
           </TouchableOpacity>
 
-          {/* Kullanıcı Bilgileri */}
-          <View className="w-full bg-bg-card rounded-2xl p-6 border border-[#3282B830] space-y-4 mb-6">
-            <View>
-              <Text className="text-text-light opacity-60 text-xs mb-1 uppercase tracking-wider font-bold">Kullanıcı Adı</Text>
-              <Text className="text-text-light text-lg font-semibold">{user.username}</Text>
-            </View>
+          <Text style={{ color: '#BBE1FA', opacity: 0.5, fontSize: 12, marginTop: 10 }}>
+            Değiştirmek için dokun
+          </Text>
+        </View>
 
-            <View className="h-[1px] bg-[#3282B830] my-2" />
-
-            <View>
-              <Text className="text-text-light opacity-60 text-xs mb-1 uppercase tracking-wider font-bold">E-Posta Adresi</Text>
-              <Text className="text-text-light text-lg font-semibold">{user.email}</Text>
-            </View>
-
-            <View className="h-[1px] bg-[#3282B830] my-2" />
-
-            <View>
-              <Text className="text-text-light opacity-60 text-xs mb-1 uppercase tracking-wider font-bold">Gidilecek Eyalet / Şehir</Text>
-              <View className="bg-bg-dark rounded-xl px-3 py-2 border border-[#3282B830] mt-1">
-                <TextInput
-                  value={stateCity}
-                  onChangeText={setStateCity}
-                  placeholder="Örn: Orlando, FL"
-                  placeholderTextColor="#BBE1FA40"
-                  style={{ color: '#BBE1FA', fontSize: 16 }}
-                />
-              </View>
-            </View>
-
-            <View className="h-[1px] bg-[#3282B830] my-2" />
-
-            <View>
-              <Text className="text-text-light opacity-60 text-xs mb-1 uppercase tracking-wider font-bold">Uçuş Başlangıç Şehri (Hometown)</Text>
-              <View className="bg-bg-dark rounded-xl px-3 py-2 border border-[#3282B830] mt-1">
-                <TextInput
-                  value={startCity}
-                  onChangeText={setStartCity}
-                  placeholder="Örn: İstanbul, TR"
-                  placeholderTextColor="#BBE1FA40"
-                  style={{ color: '#BBE1FA', fontSize: 16 }}
-                />
-              </View>
-            </View>
-
-            <View className="h-[1px] bg-[#3282B830] my-2" />
-
-            <View>
-              <Text className="text-text-light opacity-60 text-xs mb-1 uppercase tracking-wider font-bold">İş / Pozisyon</Text>
-              <View className="bg-bg-dark rounded-xl px-3 py-2 border border-[#3282B830] mt-1">
-                <TextInput
-                  value={jobRole}
-                  onChangeText={setJobRole}
-                  placeholder="Örn: Resort Worker"
-                  placeholderTextColor="#BBE1FA40"
-                  style={{ color: '#BBE1FA', fontSize: 16 }}
-                />
-              </View>
-            </View>
+        {/* ── Kullanıcı Bilgileri Kartı ─────────────────────────────────────── */}
+        <View
+          style={{
+            backgroundColor: '#0F3460',
+            borderRadius: 20,
+            padding: 20,
+            borderWidth: 1,
+            borderColor: '#3282B830',
+            marginBottom: 16,
+            gap: 16,
+          }}
+        >
+          {/* Kullanıcı Adı */}
+          <View>
+            <Text style={{ color: '#BBE1FA', opacity: 0.5, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+              Kullanıcı Adı
+            </Text>
+            <Text style={{ color: '#BBE1FA', fontSize: 17, fontWeight: '600' }}>{user.username}</Text>
           </View>
 
-          {/* Kaydet Butonu */}
-          <TouchableOpacity
-            onPress={handleSave}
-            disabled={saving}
-            className="w-full bg-brand-primary rounded-2xl py-4 items-center flex-row justify-center mb-4"
-          >
-            {saving ? (
-              <ActivityIndicator color="#BBE1FA" />
-            ) : (
-              <>
-                <Ionicons name="save-outline" size={20} color="#BBE1FA" style={{ marginRight: 8 }} />
-                <Text className="text-[#BBE1FA] font-bold text-lg">Değişiklikleri Kaydet</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          <View style={{ height: 1, backgroundColor: '#3282B820' }} />
 
-          {/* Çıkış Yap Butonu */}
-          <TouchableOpacity
-            onPress={handleLogout}
-            className="w-full rounded-2xl py-4 items-center flex-row justify-center border border-red-500/50 bg-red-500/10 mb-8"
-          >
-            <Ionicons name="log-out-outline" size={20} color="#ef4444" style={{ marginRight: 8 }} />
-            <Text className="text-red-500 font-bold text-lg">Çıkış Yap</Text>
-          </TouchableOpacity>
+          {/* E-posta */}
+          <View>
+            <Text style={{ color: '#BBE1FA', opacity: 0.5, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+              E-Posta Adresi
+            </Text>
+            <Text style={{ color: '#BBE1FA', fontSize: 17, fontWeight: '600' }}>{user.email}</Text>
+          </View>
+
+          <View style={{ height: 1, backgroundColor: '#3282B820' }} />
+
+          {/* Hedef Şehir — CitySearchInput */}
+          <CitySearchInput
+            label="🎯 Gidilecek Eyalet / Şehir"
+            placeholder="Örn: Orlando, FL"
+            value={stateCity}
+            onSelect={setStateCity}
+            icon="location-outline"
+          />
+
+          <View style={{ height: 1, backgroundColor: '#3282B820' }} />
+
+          {/* Başlangıç Şehri — CitySearchInput */}
+          <CitySearchInput
+            label="🏠 Uçuş Başlangıç Şehri (Hometown)"
+            placeholder="Örn: İstanbul, Ankara..."
+            value={startCity}
+            onSelect={setStartCity}
+            icon="home-outline"
+          />
+
+          <View style={{ height: 1, backgroundColor: '#3282B820' }} />
+
+          {/* İş / Pozisyon */}
+          <View>
+            <Text style={{ color: '#BBE1FA', opacity: 0.5, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+              İş / Pozisyon
+            </Text>
+            <View
+              style={{
+                backgroundColor: '#1B262C',
+                borderRadius: 12,
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                borderWidth: 1,
+                borderColor: '#3282B840',
+              }}
+            >
+              <TextInput
+                value={jobRole}
+                onChangeText={setJobRole}
+                placeholder="Örn: Resort Worker"
+                placeholderTextColor="#BBE1FA30"
+                style={{ color: '#BBE1FA', fontSize: 15 }}
+              />
+            </View>
+          </View>
         </View>
+
+        {/* ── Kaydet Butonu ─────────────────────────────────────────────────── */}
+        <TouchableOpacity
+          onPress={handleSave}
+          disabled={saving}
+          style={{
+            backgroundColor: '#3282B8',
+            borderRadius: 16,
+            paddingVertical: 16,
+            alignItems: 'center',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            marginBottom: 12,
+            opacity: saving ? 0.6 : 1,
+          }}
+        >
+          {saving ? (
+            <ActivityIndicator color="#BBE1FA" />
+          ) : (
+            <>
+              <Ionicons name="save-outline" size={20} color="#BBE1FA" style={{ marginRight: 8 }} />
+              <Text style={{ color: '#BBE1FA', fontWeight: '700', fontSize: 16 }}>Değişiklikleri Kaydet</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        {/* ── Çıkış Yap ────────────────────────────────────────────────────── */}
+        <TouchableOpacity
+          onPress={handleLogout}
+          style={{
+            borderRadius: 16,
+            paddingVertical: 16,
+            alignItems: 'center',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            borderWidth: 1,
+            borderColor: '#ef444450',
+            backgroundColor: '#ef444415',
+            marginBottom: 20,
+          }}
+        >
+          <Ionicons name="log-out-outline" size={20} color="#ef4444" style={{ marginRight: 8 }} />
+          <Text style={{ color: '#ef4444', fontWeight: '700', fontSize: 16 }}>Çıkış Yap</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );

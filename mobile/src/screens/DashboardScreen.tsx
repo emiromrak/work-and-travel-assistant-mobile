@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { TIMEZONES } from "../data/timezones";
+import { TIMEZONES, ISTANBUL_TIMEZONE } from "../data/timezones";
 import { useNavigation } from "@react-navigation/native";
 import { useUser } from "../context/UserContext";
 import { fetchExchangeRate } from "../services/api";
@@ -71,6 +71,7 @@ export default function DashboardScreen() {
   const navigation = useNavigation();
   const { user } = useUser();
   const [times, setTimes] = useState<TimeData[]>([]);
+  const [istanbulTime, setIstanbulTime] = useState<TimeData | null>(null);
   const [countdown, setCountdown] = useState("");
   const [flightDateInput, setFlightDateInput] = useState(defaultDateStr);
   const [flightDate, setFlightDate] = useState(defaultFlightDate);
@@ -117,6 +118,7 @@ export default function DashboardScreen() {
         ...getTimeInZone(tz.timezone),
       }));
       setTimes(updated);
+      setIstanbulTime({ ...ISTANBUL_TIMEZONE, ...getTimeInZone(ISTANBUL_TIMEZONE.timezone) });
       setCountdown(getCountdown(flightDate));
     };
     update();
@@ -252,6 +254,44 @@ export default function DashboardScreen() {
             ))}
           </View>
         </View>
+
+        {/* ── İstanbul Saati ──────────────────────────────────────────────────── */}
+        {istanbulTime && (
+          <View className="px-5 mt-4 mb-2">
+            <Text className="text-text-light font-bold text-base mb-3">
+              🇹🇷 Türkiye Saati
+            </Text>
+            <View
+              style={{
+                borderRadius: 16,
+                backgroundColor: '#0F3460',
+                padding: 16,
+                borderWidth: 1,
+                borderColor: '#3282B840',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <Text style={{ fontSize: 32 }}>{istanbulTime.emoji}</Text>
+                <View>
+                  <Text style={{ color: '#BBE1FA', fontWeight: '800', fontSize: 22, letterSpacing: 1 }}>
+                    {istanbulTime.time}
+                  </Text>
+                  <Text style={{ color: '#BBE1FA', opacity: 0.7, fontWeight: '600', fontSize: 14, marginTop: 2 }}>
+                    {istanbulTime.city}
+                  </Text>
+                  <Text style={{ color: '#BBE1FA', opacity: 0.4, fontSize: 12 }}>{istanbulTime.date}</Text>
+                </View>
+              </View>
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={{ color: '#BBE1FA', opacity: 0.4, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Yerel Saat</Text>
+                <Text style={{ fontSize: 22, marginTop: 4 }}>{istanbulTime.period}</Text>
+              </View>
+            </View>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

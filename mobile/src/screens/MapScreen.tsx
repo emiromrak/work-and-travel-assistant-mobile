@@ -1,30 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
-  Dimensions,
   StatusBar,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
-import { AIRPORTS_BY_CITY, FLIGHTS_BY_CITY } from "../data/mockFlights";
-import { CITY_GUIDES } from "../data/mockGuides";
 import { fetchDistance } from "../services/api";
 import { useUser } from "../context/UserContext";
+import CitySearchInput from "../components/CitySearchInput";
 
-const { width } = Dimensions.get("window");
-
-const CITIES = [
-  { id: "orlando", name: "Orlando, FL", lat: 28.5383, lng: -81.3792 },
-  { id: "new-york", name: "New York, NY", lat: 40.7128, lng: -74.006 },
-  { id: "los-angeles", name: "Los Angeles, CA", lat: 34.0522, lng: -118.2437 },
-  { id: "miami", name: "Miami, FL", lat: 25.7617, lng: -80.1918 },
-  { id: "chicago", name: "Chicago, IL", lat: 41.8781, lng: -87.6298 },
-];
-
+// ─── Tipler ───────────────────────────────────────────────────────────────────
 interface DistanceInfo {
   durum: boolean;
   mesafe?: string;
@@ -33,118 +23,195 @@ interface DistanceInfo {
   benim_koor?: [number, number];
 }
 
+interface AirportInfo {
+  id: string;
+  name: string;
+  code: string;
+  distance: string;
+  latitude: number;
+  longitude: number;
+}
+
+interface FlightInfo {
+  id: string;
+  airline: string;
+  airlineLogo: string;
+  price: number;
+  duration: string;
+  stops: number;
+  departure: string;
+  arrival: string;
+  date: string;
+  fromCode?: string;
+  toCode?: string;
+}
+
+// ─── Fallback: Bilinen şehirler için mock havalimanı & uçuş verisi ─────────────
+const MOCK_AIRPORTS: Record<string, AirportInfo[]> = {
+  "orlando": [
+    { id: "mco", name: "Orlando International", code: "MCO", distance: "22 km", latitude: 28.4312, longitude: -81.3081 },
+    { id: "sfb", name: "Orlando Sanford International", code: "SFB", distance: "50 km", latitude: 28.7776, longitude: -81.2375 },
+  ],
+  "new york": [
+    { id: "jfk", name: "John F. Kennedy International", code: "JFK", distance: "26 km", latitude: 40.6413, longitude: -73.7781 },
+    { id: "lga", name: "LaGuardia Airport", code: "LGA", distance: "15 km", latitude: 40.7769, longitude: -73.874 },
+  ],
+  "los angeles": [
+    { id: "lax", name: "Los Angeles International", code: "LAX", distance: "24 km", latitude: 33.9416, longitude: -118.4085 },
+  ],
+  "miami": [
+    { id: "mia", name: "Miami International Airport", code: "MIA", distance: "13 km", latitude: 25.7959, longitude: -80.287 },
+    { id: "fll", name: "Fort Lauderdale-Hollywood", code: "FLL", distance: "45 km", latitude: 26.0742, longitude: -80.1506 },
+  ],
+  "chicago": [
+    { id: "ord", name: "O'Hare International Airport", code: "ORD", distance: "28 km", latitude: 41.9742, longitude: -87.9073 },
+    { id: "mdw", name: "Chicago Midway International", code: "MDW", distance: "16 km", latitude: 41.7868, longitude: -87.7524 },
+  ],
+};
+
+const MOCK_FLIGHTS: Record<string, FlightInfo[]> = {
+  "orlando": [
+    { id: "f1", airline: "Turkish Airlines", airlineLogo: "🇹🇷", price: 620, duration: "12s 45dk", stops: 0, departure: "10:45", arrival: "16:30", date: "2025-06-15", fromCode: "IST", toCode: "MCO" },
+    { id: "f2", airline: "Lufthansa", airlineLogo: "🇩🇪", price: 548, duration: "14s 20dk", stops: 1, departure: "08:20", arrival: "22:40", date: "2025-06-15", fromCode: "IST", toCode: "MCO" },
+    { id: "f3", airline: "United Airlines", airlineLogo: "🇺🇸", price: 495, duration: "16s 05dk", stops: 1, departure: "14:10", arrival: "06:15+1", date: "2025-06-15", fromCode: "IST", toCode: "MCO" },
+  ],
+  "new york": [
+    { id: "f1", airline: "Turkish Airlines", airlineLogo: "🇹🇷", price: 520, duration: "10s 15dk", stops: 0, departure: "13:30", arrival: "16:45", date: "2025-06-15", fromCode: "IST", toCode: "JFK" },
+    { id: "f2", airline: "Lufthansa", airlineLogo: "🇩🇪", price: 430, duration: "12s 30dk", stops: 1, departure: "07:15", arrival: "14:45", date: "2025-06-15", fromCode: "IST", toCode: "JFK" },
+    { id: "f3", airline: "LOT Polish", airlineLogo: "🇵🇱", price: 395, duration: "13s 10dk", stops: 1, departure: "17:00", arrival: "22:10", date: "2025-06-15", fromCode: "IST", toCode: "JFK" },
+  ],
+  "los angeles": [
+    { id: "f1", airline: "Turkish Airlines", airlineLogo: "🇹🇷", price: 780, duration: "13s 55dk", stops: 0, departure: "14:15", arrival: "18:10", date: "2025-06-15", fromCode: "IST", toCode: "LAX" },
+    { id: "f2", airline: "Qatar Airways", airlineLogo: "🇶🇦", price: 699, duration: "17s 45dk", stops: 1, departure: "19:20", arrival: "07:05+1", date: "2025-06-15", fromCode: "IST", toCode: "LAX" },
+    { id: "f3", airline: "British Airways", airlineLogo: "🇬🇧", price: 650, duration: "16s 20dk", stops: 1, departure: "08:30", arrival: "17:50", date: "2025-06-15", fromCode: "IST", toCode: "LAX" },
+  ],
+  "miami": [
+    { id: "f1", airline: "Turkish Airlines", airlineLogo: "🇹🇷", price: 670, duration: "11s 40dk", stops: 0, departure: "13:30", arrival: "18:10", date: "2025-06-15", fromCode: "IST", toCode: "MIA" },
+    { id: "f2", airline: "Air France", airlineLogo: "🇫🇷", price: 530, duration: "14s 15dk", stops: 1, departure: "06:15", arrival: "14:30", date: "2025-06-15", fromCode: "IST", toCode: "MIA" },
+    { id: "f3", airline: "TAP Portugal", airlineLogo: "🇵🇹", price: 490, duration: "13s 50dk", stops: 1, departure: "15:45", arrival: "22:35", date: "2025-06-15", fromCode: "IST", toCode: "MIA" },
+  ],
+  "chicago": [
+    { id: "f1", airline: "Turkish Airlines", airlineLogo: "🇹🇷", price: 640, duration: "11s 15dk", stops: 0, departure: "14:10", arrival: "18:25", date: "2025-06-15", fromCode: "IST", toCode: "ORD" },
+    { id: "f2", airline: "LOT Polish", airlineLogo: "🇵🇱", price: 460, duration: "12s 50dk", stops: 1, departure: "17:00", arrival: "21:50", date: "2025-06-15", fromCode: "IST", toCode: "ORD" },
+    { id: "f3", airline: "Lufthansa", airlineLogo: "🇩🇪", price: 520, duration: "13s 30dk", stops: 1, departure: "08:20", arrival: "14:50", date: "2025-06-15", fromCode: "IST", toCode: "ORD" },
+  ],
+};
+
+function getMockDataForCity(cityName: string): { airports: AirportInfo[]; flights: FlightInfo[] } {
+  const lower = cityName.toLowerCase();
+  for (const key of Object.keys(MOCK_AIRPORTS)) {
+    if (lower.includes(key)) {
+      return { airports: MOCK_AIRPORTS[key], flights: MOCK_FLIGHTS[key] || [] };
+    }
+  }
+  return { airports: [], flights: [] };
+}
+
+// ─── Ana Ekran ─────────────────────────────────────────────────────────────────
 export default function MapScreen() {
   const { user } = useUser();
-  const [selectedCityId, setSelectedCityId] = useState("orlando");
 
-  useEffect(() => {
-    if (user?.stateCity) {
-      const userCityLower = user.stateCity.toLowerCase();
-      const found = CITIES.find((c) => 
-        userCityLower.includes(c.id) || 
-        userCityLower.includes(c.name.split(',')[0].toLowerCase().trim())
-      );
-      if (found) {
-        setSelectedCityId(found.id);
-      }
-    }
-  }, [user?.stateCity]);
-
-  const selectedCity = CITIES.find((c) => c.id === selectedCityId) ?? CITIES[0];
-  const guide = CITY_GUIDES.find((g) => g.id === selectedCityId);
+  // Başlangıç değerlerini kullanıcı profilinden al
+  const [myCity, setMyCity] = useState(user?.startCity || "");
+  const [targetCity, setTargetCity] = useState(user?.stateCity || "");
 
   const [distanceInfo, setDistanceInfo] = useState<DistanceInfo | null>(null);
   const [loadingDistance, setLoadingDistance] = useState(false);
 
+  // Harita konum state'leri
+  const [mapLat, setMapLat] = useState(28.5383);
+  const [mapLng, setMapLng] = useState(-81.3792);
+
+  // Havalimanı & uçuş verileri
+  const [airports, setAirports] = useState<AirportInfo[]>([]);
+  const [flights, setFlights] = useState<FlightInfo[]>([]);
+
+  // Hedef şehir seçildiğinde haritayı güncelle ve mesafeyi hesapla
   useEffect(() => {
+    if (!targetCity || targetCity.length < 3) return;
+
+    // Mock veriyi güncelle
+    const { airports: mockAirports, flights: mockFlights } = getMockDataForCity(targetCity);
+    setAirports(mockAirports);
+    setFlights(mockFlights);
+
     let active = true;
     const getDistanceInfo = async () => {
       setLoadingDistance(true);
       try {
-        const data = await fetchDistance(selectedCity.name, user?.startCity);
+        const data = await fetchDistance(targetCity, myCity || undefined);
         if (active && data) {
           setDistanceInfo(data);
+          if (data.hedef_koor) {
+            setMapLat(data.hedef_koor[0]);
+            setMapLng(data.hedef_koor[1]);
+          }
         }
       } catch (error) {
         console.error("Mesafe bilgisi çekilirken hata:", error);
+        setDistanceInfo(null);
       } finally {
-        if (active) {
-          setLoadingDistance(false);
-        }
+        if (active) setLoadingDistance(false);
       }
     };
     getDistanceInfo();
-    return () => {
-      active = false;
-    };
-  }, [selectedCityId, user?.startCity]);
+    return () => { active = false; };
+  }, [targetCity, myCity]);
 
-  const airports = AIRPORTS_BY_CITY[selectedCityId] || [];
-  const flights = FLIGHTS_BY_CITY[selectedCityId] || [];
+  // Profil değişirse sync et
+  useEffect(() => {
+    if (user?.startCity && !myCity) setMyCity(user.startCity);
+    if (user?.stateCity && !targetCity) setTargetCity(user.stateCity);
+  }, [user?.startCity, user?.stateCity]);
 
-  const mapLat = distanceInfo?.hedef_koor ? distanceInfo.hedef_koor[0] : selectedCity.lat;
-  const mapLng = distanceInfo?.hedef_koor ? distanceInfo.hedef_koor[1] : selectedCity.lng;
+  const cheapestIndex = flights.length > 0
+    ? flights.reduce((minIdx, f, idx) => f.price < flights[minIdx].price ? idx : minIdx, 0)
+    : -1;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-dark">
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#1B262C" }}>
       <StatusBar barStyle="light-content" backgroundColor="#1B262C" />
 
       {/* Header */}
-      <View className="px-5 pt-4 pb-3">
-        <Text className="text-text-light text-2xl font-bold">🗺️ Harita & Uçuşlar</Text>
-        <Text className="text-text-light opacity-60 text-sm mt-1">
-          Hedef şehir ve en ucuz uçuşlar
+      <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 4 }}>
+        <Text style={{ color: "#BBE1FA", fontSize: 22, fontWeight: "800" }}>🗺️ Harita & Uçuşlar</Text>
+        <Text style={{ color: "#BBE1FA", opacity: 0.6, fontSize: 13, marginTop: 2 }}>
+          Şehir seç, uçuşları ve uzaklığı gör
         </Text>
       </View>
 
-      {/* City Selector */}
       <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        className="pl-5 mb-3"
-        contentContainerStyle={{ paddingRight: 20, gap: 10 }}
-      >
-        {CITIES.map((city) => {
-          const active = city.id === selectedCityId;
-          return (
-            <TouchableOpacity
-              key={city.id}
-              onPress={() => setSelectedCityId(city.id)}
-              style={{
-                paddingHorizontal: 14,
-                paddingVertical: 8,
-                borderRadius: 20,
-                backgroundColor: active ? "#3282B8" : "#0F4C75",
-                borderWidth: 1,
-                borderColor: active ? "#3282B8" : "#3282B830",
-              }}
-            >
-              <Text
-                style={{
-                  color: "#BBE1FA",
-                  fontSize: 13,
-                  fontWeight: active ? "700" : "400",
-                }}
-              >
-                {city.name}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-
-      <ScrollView
-        className="flex-1"
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 30 }}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        keyboardShouldPersistTaps="handled"
       >
-        {/* Map */}
+        {/* ── Şehir Arama Inputları ─────────────────────────────────────────── */}
+        <View style={{ marginHorizontal: 20, marginTop: 16, gap: 12 }}>
+          <CitySearchInput
+            label="📍 Bulunduğunuz Şehir"
+            placeholder="Örn: İstanbul, Ankara..."
+            value={myCity}
+            onSelect={setMyCity}
+            icon="home-outline"
+          />
+          <CitySearchInput
+            label="🎯 Hedef Şehir"
+            placeholder="Örn: Orlando, New York..."
+            value={targetCity}
+            onSelect={setTargetCity}
+            icon="location-outline"
+          />
+        </View>
+
+        {/* ── Harita ──────────────────────────────────────────────────────── */}
         <View
           style={{
             marginHorizontal: 20,
+            marginTop: 16,
             borderRadius: 20,
             overflow: "hidden",
-            height: 240,
+            height: 220,
             borderWidth: 1,
             borderColor: "#3282B840",
           }}
@@ -155,195 +222,245 @@ export default function MapScreen() {
             region={{
               latitude: mapLat,
               longitude: mapLng,
-              latitudeDelta: 0.4,
-              longitudeDelta: 0.4,
+              latitudeDelta: 0.6,
+              longitudeDelta: 0.6,
             }}
             mapType="standard"
           >
-            {/* City center marker */}
+            {/* Hedef şehir marker */}
             <Marker
               coordinate={{ latitude: mapLat, longitude: mapLng }}
-              title={selectedCity.name}
+              title={targetCity || "Hedef Şehir"}
               description="Hedef şehir"
               pinColor="#3282B8"
             />
-
-            {/* Airport markers */}
+            {/* Havalimanı markerları */}
             {airports.map((airport) => (
               <Marker
                 key={airport.id}
                 coordinate={{ latitude: airport.latitude, longitude: airport.longitude }}
                 title={airport.name}
                 description={`${airport.code} • ${airport.distance}`}
-                pinColor="#BBE1FA"
+                pinColor="#4ade80"
               />
             ))}
           </MapView>
         </View>
 
-        {/* Mesafe Bilgisi Kartı */}
-        {loadingDistance ? (
-          <View className="mx-5 mt-4 rounded-2xl bg-bg-card p-4 items-center justify-center border border-brand-primary/20">
-            <Text className="text-text-light opacity-60 text-sm">Mesafe hesaplanıyor...</Text>
+        {/* ── Mesafe Kartı ─────────────────────────────────────────────────── */}
+        {!targetCity ? (
+          <View
+            style={{
+              marginHorizontal: 20,
+              marginTop: 16,
+              borderRadius: 16,
+              backgroundColor: "#0F3460",
+              padding: 16,
+              alignItems: "center",
+              borderWidth: 1,
+              borderColor: "#3282B830",
+            }}
+          >
+            <Ionicons name="search-outline" size={28} color="#3282B880" />
+            <Text style={{ color: "#BBE1FA", opacity: 0.5, marginTop: 8, fontSize: 13, textAlign: "center" }}>
+              Yukarıdan bir hedef şehir seç{"\n"}uzaklık, havalimanı ve uçuşlar görünür
+            </Text>
+          </View>
+        ) : loadingDistance ? (
+          <View
+            style={{
+              marginHorizontal: 20,
+              marginTop: 16,
+              borderRadius: 16,
+              backgroundColor: "#0F3460",
+              padding: 16,
+              alignItems: "center",
+              borderWidth: 1,
+              borderColor: "#3282B830",
+            }}
+          >
+            <Text style={{ color: "#BBE1FA", opacity: 0.6, fontSize: 13 }}>📡 Mesafe hesaplanıyor...</Text>
           </View>
         ) : distanceInfo?.durum ? (
-          <View className="mx-5 mt-4 rounded-2xl bg-bg-card p-4 border border-brand-primary/30">
-            <View className="flex-row items-center gap-2 mb-3">
+          <View
+            style={{
+              marginHorizontal: 20,
+              marginTop: 16,
+              borderRadius: 16,
+              backgroundColor: "#0F3460",
+              padding: 16,
+              borderWidth: 1,
+              borderColor: "#3282B840",
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <Ionicons name="navigate-circle-outline" size={22} color="#3282B8" />
-              <Text className="text-text-light font-bold text-base">Uzaklık & Konum</Text>
+              <Text style={{ color: "#BBE1FA", fontWeight: "700", fontSize: 15 }}>Uzaklık & Konum</Text>
             </View>
-            <View className="flex-row items-center justify-between">
-              <View className="flex-1">
-                <Text className="text-text-light opacity-60 text-xs uppercase tracking-wider">
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: "#BBE1FA", opacity: 0.5, fontSize: 10, textTransform: "uppercase", letterSpacing: 1 }}>
                   Bulunduğunuz Şehir
                 </Text>
-                <Text className="text-text-light font-semibold text-sm mt-0.5">
-                  {distanceInfo.benim_sehir || "Belirlenemedi"}
+                <Text style={{ color: "#BBE1FA", fontWeight: "600", fontSize: 13, marginTop: 2 }}>
+                  {distanceInfo.benim_sehir || myCity || "Belirlenemedi"}
                 </Text>
               </View>
-              
-              <View className="px-4 items-center justify-center">
+
+              <View style={{ alignItems: "center", paddingHorizontal: 12 }}>
                 <Ionicons name="airplane-outline" size={18} color="#BBE1FA" />
-                <View style={{ height: 1, width: 60, backgroundColor: "#3282B860", marginVertical: 4 }} />
-                <Text className="text-brand-primary font-bold text-xs">
+                <View style={{ height: 1, width: 50, backgroundColor: "#3282B860", marginVertical: 4 }} />
+                <Text style={{ color: "#3282B8", fontWeight: "800", fontSize: 13 }}>
                   {distanceInfo.mesafe} km
                 </Text>
               </View>
 
-              <View className="flex-1 items-end">
-                <Text className="text-text-light opacity-60 text-xs uppercase tracking-wider">
+              <View style={{ flex: 1, alignItems: "flex-end" }}>
+                <Text style={{ color: "#BBE1FA", opacity: 0.5, fontSize: 10, textTransform: "uppercase", letterSpacing: 1 }}>
                   Hedef Şehir
                 </Text>
-                <Text className="text-text-light font-semibold text-sm mt-0.5 text-right">
-                  {selectedCity.name}
+                <Text style={{ color: "#BBE1FA", fontWeight: "600", fontSize: 13, marginTop: 2, textAlign: "right" }}>
+                  {targetCity}
                 </Text>
               </View>
             </View>
           </View>
         ) : null}
 
-        {/* Nearest Airport Info */}
-        <View className="mx-5 mt-4 rounded-2xl bg-bg-card p-4">
-          <View className="flex-row items-center gap-2 mb-3">
-            <Text className="text-xl">🛫</Text>
-            <Text className="text-text-light font-bold text-base">En Yakın Havalimanı</Text>
-          </View>
-          {airports.map((airport) => (
-            <View
-              key={airport.id}
-              className="flex-row items-center justify-between py-2"
-              style={{ borderBottomWidth: 1, borderBottomColor: "#3282B830" }}
-            >
-              <View>
-                <Text className="text-text-light font-semibold text-sm">{airport.name}</Text>
-                <Text className="text-text-light opacity-50 text-xs">
-                  {airport.distance} uzaklıkta
-                </Text>
-              </View>
+        {/* ── En Yakın Havalimanı ──────────────────────────────────────────── */}
+        {airports.length > 0 && (
+          <View
+            style={{
+              marginHorizontal: 20,
+              marginTop: 16,
+              borderRadius: 16,
+              backgroundColor: "#0F3460",
+              padding: 16,
+              borderWidth: 1,
+              borderColor: "#3282B830",
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <Text style={{ fontSize: 18 }}>🛫</Text>
+              <Text style={{ color: "#BBE1FA", fontWeight: "700", fontSize: 15 }}>En Yakın Havalimanı</Text>
+            </View>
+            {airports.map((airport, index) => (
               <View
+                key={airport.id}
                 style={{
-                  backgroundColor: "#3282B8",
-                  paddingHorizontal: 10,
-                  paddingVertical: 4,
-                  borderRadius: 8,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingVertical: 10,
+                  borderBottomWidth: index < airports.length - 1 ? 1 : 0,
+                  borderBottomColor: "#3282B820",
                 }}
               >
-                <Text className="text-text-light font-bold text-sm">{airport.code}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        {/* Flight Cards */}
-        <View className="px-5 mt-4">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-text-light font-bold text-base">
-              💸 En Ucuz Uçuş Rotaları
-            </Text>
-            <View
-              style={{
-                backgroundColor: "#0F4C75",
-                borderRadius: 8,
-                paddingHorizontal: 8,
-                paddingVertical: 3,
-              }}
-            >
-              <Text className="text-text-light opacity-60 text-xs">Mock Veri</Text>
-            </View>
-          </View>
-
-          {flights.map((flight, index) => (
-            <View
-              key={flight.id}
-              className="rounded-2xl bg-bg-card p-4 mb-3"
-              style={{
-                borderWidth: index === 2 ? 1 : 0,
-                borderColor: "#4ade80",
-              }}
-            >
-              {index === 2 && (
+                <View>
+                  <Text style={{ color: "#BBE1FA", fontWeight: "600", fontSize: 13 }}>{airport.name}</Text>
+                  <Text style={{ color: "#BBE1FA", opacity: 0.5, fontSize: 11, marginTop: 2 }}>
+                    {airport.distance} uzaklıkta
+                  </Text>
+                </View>
                 <View
                   style={{
-                    position: "absolute",
-                    top: -1,
-                    right: 12,
-                    backgroundColor: "#4ade80",
-                    paddingHorizontal: 8,
-                    paddingVertical: 2,
-                    borderBottomLeftRadius: 6,
-                    borderBottomRightRadius: 6,
+                    backgroundColor: "#3282B8",
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                    borderRadius: 8,
                   }}
                 >
-                  <Text style={{ color: "#1B262C", fontSize: 10, fontWeight: "700" }}>
-                    EN UCUZ
-                  </Text>
-                </View>
-              )}
-
-              <View className="flex-row items-center justify-between mb-2">
-                <View className="flex-row items-center gap-2">
-                  <Text className="text-lg">{flight.airlineLogo}</Text>
-                  <Text className="text-text-light font-semibold text-sm">{flight.airline}</Text>
-                </View>
-                <Text
-                  style={{
-                    color: "#4ade80",
-                    fontWeight: "800",
-                    fontSize: 20,
-                  }}
-                >
-                  ${flight.price}
-                </Text>
-              </View>
-
-              <View className="flex-row items-center justify-between">
-                <View className="items-center">
-                  <Text className="text-text-light font-bold text-base">{flight.departure}</Text>
-                  <Text className="text-text-light opacity-50 text-xs">{flight.fromCode || "IST"}</Text>
-                </View>
-
-                <View className="flex-1 items-center px-3">
-                  <Text className="text-text-light opacity-40 text-xs">{flight.duration}</Text>
-                  <View
-                    style={{ height: 1, backgroundColor: "#3282B860", width: "100%", marginVertical: 4 }}
-                  />
-                  <Text className="text-text-light opacity-40 text-xs">
-                    {flight.stops === 0 ? "Direkt" : `${flight.stops} aktarma`}
-                  </Text>
-                </View>
-
-                <View className="items-center">
-                  <Text className="text-text-light font-bold text-base">{flight.arrival}</Text>
-                  <Text className="text-text-light opacity-50 text-xs">{flight.toCode || "MCO"}</Text>
+                  <Text style={{ color: "#BBE1FA", fontWeight: "800", fontSize: 13 }}>{airport.code}</Text>
                 </View>
               </View>
+            ))}
+          </View>
+        )}
 
-              <Text className="text-text-light opacity-30 text-xs text-center mt-2">
-                {flight.date}
-              </Text>
+        {/* ── Uçuş Rotaları ───────────────────────────────────────────────── */}
+        {flights.length > 0 && (
+          <View style={{ paddingHorizontal: 20, marginTop: 16 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <Text style={{ color: "#BBE1FA", fontWeight: "700", fontSize: 15 }}>💸 En Ucuz Uçuş Rotaları</Text>
+              <View
+                style={{
+                  backgroundColor: "#0F4C75",
+                  borderRadius: 8,
+                  paddingHorizontal: 8,
+                  paddingVertical: 3,
+                }}
+              >
+                <Text style={{ color: "#BBE1FA", opacity: 0.6, fontSize: 11 }}>Mock Veri</Text>
+              </View>
             </View>
-          ))}
-        </View>
+
+            {flights.map((flight, index) => {
+              const isCheapest = index === cheapestIndex;
+              return (
+                <View
+                  key={flight.id}
+                  style={{
+                    borderRadius: 16,
+                    backgroundColor: "#0F3460",
+                    padding: 16,
+                    marginBottom: 12,
+                    borderWidth: isCheapest ? 1 : 0,
+                    borderColor: "#4ade80",
+                  }}
+                >
+                  {isCheapest && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: -1,
+                        right: 12,
+                        backgroundColor: "#4ade80",
+                        paddingHorizontal: 8,
+                        paddingVertical: 2,
+                        borderBottomLeftRadius: 6,
+                        borderBottomRightRadius: 6,
+                      }}
+                    >
+                      <Text style={{ color: "#1B262C", fontSize: 10, fontWeight: "700" }}>EN UCUZ</Text>
+                    </View>
+                  )}
+
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                      <Text style={{ fontSize: 18 }}>{flight.airlineLogo}</Text>
+                      <Text style={{ color: "#BBE1FA", fontWeight: "600", fontSize: 13 }}>{flight.airline}</Text>
+                    </View>
+                    <Text style={{ color: "#4ade80", fontWeight: "800", fontSize: 20 }}>${flight.price}</Text>
+                  </View>
+
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                    <View style={{ alignItems: "center" }}>
+                      <Text style={{ color: "#BBE1FA", fontWeight: "700", fontSize: 15 }}>{flight.departure}</Text>
+                      <Text style={{ color: "#BBE1FA", opacity: 0.5, fontSize: 11 }}>{flight.fromCode || "IST"}</Text>
+                    </View>
+
+                    <View style={{ flex: 1, alignItems: "center", paddingHorizontal: 10 }}>
+                      <Text style={{ color: "#BBE1FA", opacity: 0.4, fontSize: 11 }}>{flight.duration}</Text>
+                      <View style={{ height: 1, backgroundColor: "#3282B860", width: "100%", marginVertical: 4 }} />
+                      <Text style={{ color: "#BBE1FA", opacity: 0.4, fontSize: 11 }}>
+                        {flight.stops === 0 ? "Direkt ✈️" : `${flight.stops} aktarma`}
+                      </Text>
+                    </View>
+
+                    <View style={{ alignItems: "center" }}>
+                      <Text style={{ color: "#BBE1FA", fontWeight: "700", fontSize: 15 }}>{flight.arrival}</Text>
+                      <Text style={{ color: "#BBE1FA", opacity: 0.5, fontSize: 11 }}>{flight.toCode || "?"}</Text>
+                    </View>
+                  </View>
+
+                  <Text style={{ color: "#BBE1FA", opacity: 0.3, fontSize: 11, textAlign: "center", marginTop: 8 }}>
+                    {flight.date}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

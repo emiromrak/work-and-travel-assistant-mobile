@@ -42,3 +42,12 @@ export const TIMEZONES = [
     emoji: "🌺",
   },
 ];
+
+export const ISTANBUL_TIMEZONE = {
+  id: "istanbul",
+  city: "İstanbul",
+  state: "TÜRKİYE",
+  timezone: "Europe/Istanbul",
+  emoji: "🇹🇷",
+};
+

@@ -167,6 +167,20 @@ export const fetchDistance = async (targetCity: string, myCity?: string) => {
   }
 };
 
+// Şehir arama önerileri API'si
+export const fetchCitySuggestions = async (query: string): Promise<string[]> => {
+  try {
+    if (query.length < 2) return [];
+    const response = await fetch(`${API_BASE_URL}/city-suggestions?q=${encodeURIComponent(query)}`);
+    if (!response.ok) return [];
+    const data = await response.json();
+    return data.suggestions || [];
+  } catch (error) {
+    console.error("Şehir önerileri alınamadı:", error);
+    return [];
+  }
+};
+
 // Tüm kullanıcıları çekme API'si (DM için)
 export const fetchUsers = async () => {
   try {
