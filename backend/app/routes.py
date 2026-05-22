@@ -8,6 +8,7 @@ import bcrypt
 from supabase import create_client, Client
 import time
 import io
+from cryptography.fernet import Fernet, InvalidToken
 
 from app.database import get_db
 from app.models import User, Post, Message
@@ -17,6 +18,27 @@ from app.schemas import GuideRequest, UserCreate, UserLogin, PostCreate, Message
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
+
+# 🔐 Mesaj Şifreleme Ayarları (Fernet / AES-128-CBC)
+# ENCRYPTION_KEY: Fernet.generate_key() ile üretilmiş base64 key (32 byte)
+ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY")
+cipher_suite: Fernet | None = Fernet(ENCRYPTION_KEY.encode()) if ENCRYPTION_KEY else None
+
+def encrypt_text(text: str) -> str:
+    """Metni Fernet ile şifreler. cipher_suite yoksa düz metin döner."""
+    if not cipher_suite:
+        return text
+    return cipher_suite.encrypt(text.encode("utf-8")).decode("utf-8")
+
+def decrypt_text(token: str) -> str:
+    """Fernet token'ını çözer. Hata olursa düz metni döner (eski kayıtlar)."""
+    if not cipher_suite:
+        return token
+    try:
+        return cipher_suite.decrypt(token.encode("utf-8")).decode("utf-8")
+    except (InvalidToken, Exception):
+        # Şifrelenmemiş eski kayıtlar için güvenli geri dönüş
+        return token
 
 
 # --- DELTA ARAÇLARI ---
@@ -277,7 +299,11 @@ async def send_message(
     if not db.query(User).filter(User.id == sender_id).first() or not db.query(User).filter(User.id == receiver_id).first():
         raise HTTPException(status_code=404, detail="Kullanıcılar sistemde bulunamadı!")
 
-    image_url = None
+    # 🔐 Mesaj içeriğini şifrele
+    encrypted_content = encrypt_text(content)
+
+    # 📸 Gizli kovaya yükle; sadece dosya yolunu sakla
+    image_path = None
     if file and file.filename:
         if not supabase:
             raise HTTPException(status_code=500, detail="Supabase Storage ayarları eksik!")
@@ -290,11 +316,12 @@ async def send_message(
                 file=contents,
                 file_options={"content-type": file.content_type or "image/jpeg"}
             )
-            image_url = supabase.storage.from_("chat_images").get_public_url(unique_filename)
+            # ✅ Public URL YOK: sadece dosya yolunu kaydet
+            image_path = unique_filename
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Fotoğraf yüklenirken hata: {str(e)}")
 
-    new_message = Message(sender_id=sender_id, receiver_id=receiver_id, content=content, image_url=image_url)
+    new_message = Message(sender_id=sender_id, receiver_id=receiver_id, content=encrypted_content, image_url=image_path)
     db.add(new_message)
     db.commit()
     return {"status": "success", "message": "Mesaj iletildi! 🚀"}
@@ -304,4 +331,25 @@ async def get_conversation(user1_id: int, user2_id: int, db: Session = Depends(g
     messages = db.query(Message).filter(
         ((Message.sender_id == user1_id) & (Message.receiver_id == user2_id)) | ((Message.sender_id == user2_id) & (Message.receiver_id == user1_id))
     ).order_by(Message.id.asc()).all()
-    return {"status": "success", "data": [{"id": m.id, "sender_id": m.sender_id, "receiver_id": m.receiver_id, "content": m.content, "image_url": m.image_url} for m in messages]}
+    result = []
+    for m in messages:
+        # 🔓 Şifreli içeriği çöz
+        decrypted_content = decrypt_text(m.content)
+
+        # 🔗 Gizli kovadaki fotoğraf için 60 saniyelik geçici signed URL üret
+        signed_image_url = None
+        if m.image_url and supabase:
+            try:
+                signed = supabase.storage.from_("chat_images").create_signed_url(m.image_url, 60)
+                signed_image_url = signed.get("signedURL") or signed.get("signedUrl")
+            except Exception:
+                signed_image_url = None
+
+        result.append({
+            "id": m.id,
+            "sender_id": m.sender_id,
+            "receiver_id": m.receiver_id,
+            "content": decrypted_content,
+            "image_url": signed_image_url,
+        })
+    return {"status": "success", "data": result}
