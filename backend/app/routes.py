@@ -56,6 +56,15 @@ async def get_currency(miktar: float = 1, yon: str = "USD_TO_TRY"):
 async def get_distance(target_city: str, my_city: str = None):
     return mesafe_ve_koordinat_bul(target_city, my_city)
 
+@router.get("/city-suggestions")
+async def get_city_suggestions(q: str):
+    """Kullanıcının yazdığı metne göre dünya genelinden şehir önerileri döndürür."""
+    from app.delta_tools import onerileri_getir
+    if len(q) < 2:
+        return {"suggestions": []}
+    suggestions = onerileri_getir(q)
+    return {"suggestions": suggestions[:8]}
+
 
 # ==========================================
 # 👥 SOSYAL AĞ API: KULLANICI İŞLEMLERİ
