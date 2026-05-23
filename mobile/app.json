@@ -1,41 +1,56 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "WAT Social - Assistant",
+    "slug": "wat-social-assistant",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
+    "scheme": "watsocial",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1B262C"
     },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
+      "bundleIdentifier": "com.emiromrak.watsocial",
+      "buildNumber": "1",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Konumunuzu paylaşmak için konum erişimi gerekli.",
-        "NSLocationAlwaysUsageDescription": "Konumunuzu paylaşmak için konum erişimi gerekli.",
-        "NSPhotoLibraryUsageDescription": "Fotoğraf paylaşmak için galeri erişimi gerekli."
+        "NSLocationWhenInUseUsageDescription": "Gönderi paylaşırken konumunuzu ekleyebilmek için konum erişimi gereklidir.",
+        "NSLocationAlwaysUsageDescription": "Gönderi paylaşırken konumunuzu ekleyebilmek için konum erişimi gereklidir.",
+        "NSPhotoLibraryUsageDescription": "Profil fotoğrafı ve gönderi paylaşmak için galeri erişimi gereklidir.",
+        "NSCameraUsageDescription": "Profil fotoğrafı çekmek ve gönderi paylaşmak için kamera erişimi gereklidir.",
+        "NSPhotoLibraryAddUsageDescription": "Paylaşılan fotoğrafları galerinize kaydetmek için erişim gereklidir."
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#1B262C"
       },
+      "package": "com.emiromrak.watsocial",
+      "versionCode": 1,
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.READ_MEDIA_IMAGES"
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.CAMERA",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE"
       ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "privacyPolicyUrl": "https://oasis-backend-pro.onrender.com/privacy",
+      "termsOfServiceUrl": "https://oasis-backend-pro.onrender.com/privacy"
     }
   }
 }
+

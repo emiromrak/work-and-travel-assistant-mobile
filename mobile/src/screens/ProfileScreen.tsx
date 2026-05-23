@@ -16,12 +16,14 @@ import * as ImagePicker from 'expo-image-picker';
 import { useUser } from '../context/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import CitySearchInput from '../components/CitySearchInput';
+import { deleteAccountAPI } from '../services/api';
 
 export default function ProfileScreen() {
   const { user, setUser, updateProfilePic, updateUserProfile } = useUser();
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [stateCity, setStateCity] = useState(user?.stateCity ?? '');
   const [jobRole, setJobRole] = useState(user?.jobRole ?? '');
   const [startCity, setStartCity] = useState(user?.startCity ?? '');
@@ -129,6 +131,48 @@ export default function ProfileScreen() {
 
   const handleLogout = () => {
     setUser(null);
+  };
+
+  // ── Hesap Silme ───────────────────────────────────────────────────────────────
+  const handleDeleteAccount = () => {
+    // 1. Onay
+    Alert.alert(
+      '⚠️ Hesabı Sil',
+      'Bu işlem geri alınamaz. Tüm gönderilerin, mesajların ve profil bilgilerin kalıcı olarak silinecek.',
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        {
+          text: 'Devam Et',
+          style: 'destructive',
+          onPress: () => {
+            // 2. Kesin Onay
+            Alert.alert(
+              '🗑️ Son Onay',
+              'Hesabını silmek istediğine emin misin?',
+              [
+                { text: 'İptal', style: 'cancel' },
+                {
+                  text: 'Evet, Hesabımı Sil',
+                  style: 'destructive',
+                  onPress: async () => {
+                    if (!user?.id) return;
+                    setDeleting(true);
+                    try {
+                      await deleteAccountAPI(user.id);
+                      setUser(null); // Oturumu kapat
+                    } catch (e: any) {
+                      Alert.alert('Hata', e.message || 'Hesap silinirken bir sorun oluştu.');
+                    } finally {
+                      setDeleting(false);
+                    }
+                  },
+                },
+              ]
+            );
+          },
+        },
+      ]
+    );
   };
 
   if (!user) return null;
@@ -328,12 +372,43 @@ export default function ProfileScreen() {
             borderWidth: 1,
             borderColor: '#ef444450',
             backgroundColor: '#ef444415',
-            marginBottom: 20,
+            marginBottom: 12,
           }}
         >
           <Ionicons name="log-out-outline" size={20} color="#ef4444" style={{ marginRight: 8 }} />
           <Text style={{ color: '#ef4444', fontWeight: '700', fontSize: 16 }}>Çıkış Yap</Text>
         </TouchableOpacity>
+
+        {/* ── Hesabı Sil ───────────────────────────────────────────────────── */}
+        <View style={{ borderTopWidth: 1, borderTopColor: '#3282B820', paddingTop: 16, marginBottom: 20 }}>
+          <TouchableOpacity
+            onPress={handleDeleteAccount}
+            disabled={deleting}
+            style={{
+              borderRadius: 16,
+              paddingVertical: 16,
+              alignItems: 'center',
+              flexDirection: 'row',
+              justifyContent: 'center',
+              borderWidth: 1,
+              borderColor: '#7f1d1d50',
+              backgroundColor: '#7f1d1d15',
+              opacity: deleting ? 0.6 : 1,
+            }}
+          >
+            {deleting ? (
+              <ActivityIndicator color="#dc2626" />
+            ) : (
+              <>
+                <Ionicons name="trash-outline" size={20} color="#dc2626" style={{ marginRight: 8 }} />
+                <Text style={{ color: '#dc2626', fontWeight: '700', fontSize: 16 }}>Hesabı Kalıcı Olarak Sil</Text>
+              </>
+            )}
+          </TouchableOpacity>
+          <Text style={{ color: '#BBE1FA', opacity: 0.3, fontSize: 11, textAlign: 'center', marginTop: 8 }}>
+            Bu işlem geri alınamaz. Tüm veriler silinir.
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

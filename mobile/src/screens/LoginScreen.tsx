@@ -7,7 +7,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert
+  Alert,
+  Linking,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,10 +24,21 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [resultMessage, setResultMessage] = useState("");
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+
+  const PRIVACY_URL = "https://oasis-backend-pro.onrender.com/privacy";
 
   const handleAuth = async () => {
     if (!email || !password || (!isLoginMode && !username)) {
       Alert.alert("Hata", "Lütfen tüm alanları doldurun.");
+      return;
+    }
+    // Kayıt modunda gizlilik politikası onayı zorunlu
+    if (!isLoginMode && !privacyAccepted) {
+      Alert.alert(
+        "Onay Gerekli",
+        "Devam etmek için Gizlilik Politikası'nı kabul etmelisin."
+      );
       return;
     }
 
@@ -172,12 +185,56 @@ export default function LoginScreen() {
           <TouchableOpacity onPress={() => {
             setIsLoginMode(!isLoginMode);
             setResultMessage("");
+            setPrivacyAccepted(false);
           }}>
             <Text className="text-brand-primary font-bold">
               {isLoginMode ? "Kayıt Ol" : "Giriş Yap"}
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* Gizlilik Politikası notu — sadece kayıt modunda */}
+        {!isLoginMode && (
+          <View style={{ marginTop: 20, paddingHorizontal: 4 }}>
+            <TouchableOpacity
+              onPress={() => setPrivacyAccepted(!privacyAccepted)}
+              style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}
+              activeOpacity={0.7}
+            >
+              {/* Checkbox */}
+              <View
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 6,
+                  borderWidth: 2,
+                  borderColor: privacyAccepted ? '#3282B8' : '#3282B860',
+                  backgroundColor: privacyAccepted ? '#3282B8' : 'transparent',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginTop: 1,
+                  flexShrink: 0,
+                }}
+              >
+                {privacyAccepted && (
+                  <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800', lineHeight: 16 }}>✓</Text>
+                )}
+              </View>
+
+              {/* Metin */}
+              <Text style={{ color: '#BBE1FA', opacity: 0.7, fontSize: 13, flex: 1, lineHeight: 20 }}>
+                {'Kayıt olarak '}
+                <Text
+                  style={{ color: '#3282B8', textDecorationLine: 'underline', fontWeight: '600' }}
+                  onPress={() => Linking.openURL(PRIVACY_URL)}
+                >
+                  Gizlilik Politikası
+                </Text>
+                {"'nı okuduğumu ve kabul ettiğimi onaylıyorum."}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

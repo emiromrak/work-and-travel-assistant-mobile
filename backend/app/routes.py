@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Request
 import base64
 from sqlalchemy.orm import Session
 import os
@@ -60,6 +60,14 @@ groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 # --- ROUTER ---
 router = APIRouter(prefix="/api")
 
+# Rate limiter (main.py'den inject edilir)
+_limiter = None
+
+def set_limiter(lim):
+    """main.py tarafından çağrılır; rate limiter'ı route'lara bağlar."""
+    global _limiter
+    _limiter = lim
+
 
 # ==========================================
 # 🛠️ DELTA ARAÇLARI API (AI, Döviz, Harita)
@@ -106,7 +114,11 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
     return {"status": "success", "message": f"Hoş geldin {new_user.username}!", "user_id": new_user.id}
 
 @router.post("/login")
-async def login_user(credentials: UserLogin, db: Session = Depends(get_db)):
+async def login_user(request: Request, credentials: UserLogin, db: Session = Depends(get_db)):
+    # 🛡️ Rate limiting: aynı IP'den 1 dakikada max 5 giriş denemesi
+    limiter = getattr(request.app.state, "limiter", None)
+    if limiter:
+        limiter.limit("5/minute")(lambda r: None)(request)
     user = db.query(User).filter(User.email == credentials.email).first()
     if not user or not bcrypt.checkpw(credentials.password.encode('utf-8'), user.hashed_password.encode('utf-8')):
         raise HTTPException(status_code=401, detail="Email veya şifre yanlış!")
@@ -353,3 +365,43 @@ async def get_conversation(user1_id: int, user2_id: int, db: Session = Depends(g
             "image_url": signed_image_url,
         })
     return {"status": "success", "data": result}
+
+
+# ==========================================
+# 🗑️ HESAP SİLME (Apple & Google Zorunluluğu)
+# ==========================================
+@router.delete("/users/{user_id}")
+async def delete_account(user_id: int, db: Session = Depends(get_db)):
+    """
+    Kullanıcının hesabını ve tüm ilişkili verilerini siler.
+    Apple App Store 2023+ ve Google Play politikası gereği zorunludur.
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı!")
+
+    # 1️⃣ Kullanıcının gönderdiği / aldığı tüm mesajları sil
+    db.query(Message).filter(
+        (Message.sender_id == user_id) | (Message.receiver_id == user_id)
+    ).delete(synchronize_session=False)
+
+    # 2️⃣ Kullanıcının gönderilerini sil
+    db.query(Post).filter(Post.user_id == user_id).delete(synchronize_session=False)
+
+    # 3️⃣ Supabase'deki profil fotoğrafını sil (varsa)
+    if supabase and user.profile_pic:
+        try:
+            # URL'den dosya adını çıkar
+            filename = user.profile_pic.split("/")[-1]
+            supabase.storage.from_("avatars").remove([filename])
+        except Exception:
+            pass  # Silme başarısız olsa bile devam et
+
+    # 4️⃣ Kullanıcıyı sil
+    db.delete(user)
+    db.commit()
+
+    return {
+        "status": "success",
+        "message": "Hesabın ve tüm verilerin kalıcı olarak silindi. Görüşmek üzere! 👋"
+    }

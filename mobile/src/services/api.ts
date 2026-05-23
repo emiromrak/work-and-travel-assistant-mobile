@@ -313,3 +313,27 @@ export const sendMessageAPI = async (messageData: {
     throw error;
   }
 };
+
+// 🗑️ Hesap Silme API'si (Apple & Google zorunluluğu)
+export const deleteAccountAPI = async (userId: number) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+      method: 'DELETE',
+    });
+    const responseText = await response.text();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      throw new Error(`Sunucu Hatası: ${responseText.substring(0, 50)}...`);
+    }
+    if (!response.ok) {
+      throw new Error(data?.detail || 'Hesap silinemedi.');
+    }
+    return data;
+  } catch (error) {
+    console.error('Hesap silinirken hata oluştu:', error);
+    throw error;
+  }
+};
+

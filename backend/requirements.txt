@@ -10,3 +10,5 @@ requests
 geocoder
 geopy
 psycopg2-binary
+cryptography
+slowapi

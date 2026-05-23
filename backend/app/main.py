@@ -1,5 +1,8 @@
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse, JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # --- 1. VERİTABANI VE MODELLER ---
 from app.database import engine
@@ -16,11 +19,17 @@ try:
 except Exception as e:
     pass
 
-# --- 2. UYGULAMA AYARLARI ---
-app = FastAPI(title="Mali's Journey API", version="1.0.0")
+# --- 2. RATE LIMITER ---
+limiter = Limiter(key_func=get_remote_address)
 
-# --- 3. ROUTER DAHİL ET ---
-from app.routes import router
+# --- 3. UYGULAMA AYARLARI ---
+app = FastAPI(title="Mali's Journey API", version="1.0.0")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# --- 4. ROUTER DAHİL ET (limiter'ı route'lara ilet) ---
+from app.routes import router, set_limiter
+set_limiter(limiter)
 app.include_router(router)
 
 # ==========================================
@@ -151,3 +160,88 @@ async def admin_dashboard():
     </html>
     """
     return HTMLResponse(content=html_content)
+
+
+# ==========================================
+# 📄 GİZLİLİK POLİTİKASI SAYFASI
+# ==========================================
+@app.get("/privacy", response_class=HTMLResponse)
+async def privacy_policy():
+    html = """<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gizlilik Politikası | Mali's Journey</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.7; }
+        .container { max-width: 800px; margin: 0 auto; padding: 48px 24px; }
+        h1 { font-size: 2rem; font-weight: 800; background: linear-gradient(135deg, #38bdf8, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+        .updated { color: #64748b; font-size: 0.9rem; margin-bottom: 40px; }
+        h2 { font-size: 1.2rem; font-weight: 700; color: #38bdf8; margin: 36px 0 12px; }
+        p, li { color: #94a3b8; margin-bottom: 10px; }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 6px; }
+        .badge { display: inline-block; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 4px 12px; font-size: 0.8rem; color: #64748b; margin-bottom: 40px; }
+        .contact { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; margin-top: 40px; }
+        .contact a { color: #38bdf8; text-decoration: none; }
+        hr { border: none; border-top: 1px solid #1e293b; margin: 32px 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔐 Gizlilik Politikası</h1>
+    <p class="updated">Son güncelleme: Mayıs 2025</p>
+    <span class="badge">Mali's Journey — Work &amp; Travel Asistanı</span>
+
+    <p>Bu gizlilik politikası, <strong>Mali's Journey</strong> uygulamasını kullanırken toplanan, işlenen ve saklanan kişisel verileriniz hakkında sizi bilgilendirmek amacıyla hazırlanmıştır.</p>
+
+    <h2>1. Toplanan Veriler</h2>
+    <ul>
+        <li><strong>Hesap bilgileri:</strong> Ad, kullanıcı adı, e-posta adresi ve şifreli (hash) parola</li>
+        <li><strong>Profil bilgileri:</strong> Profil fotoğrafı, çalışma şehri, meslek, başlangıç şehri</li>
+        <li><strong>İçerik verileri:</strong> Paylaştığınız gönderiler, resimler ve mesajlar</li>
+        <li><strong>Konum bilgisi:</strong> Yalnızca gönderi paylaşımı sırasında ve izin vermeniz halinde</li>
+    </ul>
+
+    <h2>2. Verilerin Kullanımı</h2>
+    <ul>
+        <li>Hesabınızı oluşturmak ve yönetmek</li>
+        <li>Uygulama özelliklerini (sosyal akış, mesajlaşma, AI rehber) sunmak</li>
+        <li>Uygulama güvenliğini sağlamak</li>
+        <li>Hizmet kalitesini iyileştirmek</li>
+    </ul>
+
+    <h2>3. Veri Saklama ve Güvenlik</h2>
+    <p>Verileriniz <strong>Supabase</strong> altyapısı (AWS bölgesi) üzerinde güvenli şekilde saklanır. Şifreleriniz <strong>bcrypt</strong> ile hashlenir; özel mesajlarınız <strong>AES-256 (Fernet)</strong> şifrelemesiyle korunur. Verilerinize yetkisiz erişimi önlemek için HTTPS zorunlu tutulur.</p>
+
+    <h2>4. Üçüncü Taraf Hizmetler</h2>
+    <ul>
+        <li><strong>Supabase:</strong> Veritabanı ve dosya depolama</li>
+        <li><strong>Groq AI:</strong> Yapay zeka rehber özelliği (yalnızca şehir adı ve konu gönderilir)</li>
+    </ul>
+    <p>Bu hizmetlerin kendi gizlilik politikaları geçerlidir.</p>
+
+    <h2>5. Haklarınız</h2>
+    <ul>
+        <li>Verilerinize erişme ve düzeltme hakkı</li>
+        <li>Hesabınızı ve tüm verilerinizi silme hakkı (uygulama içi Ayarlar → Hesabı Sil)</li>
+        <li>Kişisel veri işleme faaliyetleri hakkında bilgi talep etme hakkı</li>
+    </ul>
+
+    <h2>6. Çerezler</h2>
+    <p>Uygulama, çerez kullanmamaktadır. Oturum yönetimi yalnızca cihazınızda yerel olarak depolanan kullanıcı kimliği aracılığıyla sağlanır.</p>
+
+    <h2>7. Veri Saklama Süresi</h2>
+    <p>Verileriniz hesabınız aktif olduğu sürece saklanır. Hesabınızı sildiğinizde tüm kişisel verileriniz 30 gün içinde kalıcı olarak silinir.</p>
+
+    <hr>
+    <div class="contact">
+        <strong>📬 İletişim</strong><br><br>
+        <p>Gizlilik politikamıza ilişkin sorularınız için: <a href="mailto:privacy@malisjourney.app">privacy@malisjourney.app</a></p>
+    </div>
+</div>
+</body>
+</html>"""
+    return HTMLResponse(content=html)
