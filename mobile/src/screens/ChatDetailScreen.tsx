@@ -168,25 +168,40 @@ export default function ChatDetailScreen() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 25}
       >
         {/* Header */}
-        <View className="px-4 py-3 flex-row items-center border-b border-[#3282B820] bg-bg-card">
-          <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
+        <View
+          style={{
+            paddingHorizontal: 16,
+            paddingVertical: 14,
+            flexDirection: 'row',
+            alignItems: 'center',
+            borderBottomWidth: 1,
+            borderBottomColor: '#3282B815',
+            backgroundColor: '#0B3A5C',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 6,
+            elevation: 4,
+          }}
+        >
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 14 }}>
             <Ionicons name="arrow-back" size={24} color="#BBE1FA" />
           </TouchableOpacity>
           
           {receiver.profile_pic ? (
             <Image
               source={{ uri: receiver.profile_pic }}
-              className="w-10 h-10 rounded-full border border-brand-primary"
+              style={{ width: 42, height: 42, borderRadius: 21, borderWidth: 2, borderColor: '#3282B8' }}
             />
           ) : (
-            <View className="w-10 h-10 rounded-full bg-[#0F4C75] items-center justify-center border border-brand-primary">
+            <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: '#0F3460', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#3282B8' }}>
               <Ionicons name="person" size={18} color="#BBE1FA" />
             </View>
           )}
 
           <View className="ml-3 flex-1">
-            <Text className="text-text-light font-bold text-sm">{receiver.username}</Text>
-            <Text className="text-text-light opacity-50 text-xs">J1 Student</Text>
+            <Text style={{ color: '#BBE1FA', fontWeight: '800', fontSize: 15 }}>{receiver.username}</Text>
+            <Text style={{ color: '#BBE1FA', opacity: 0.4, fontSize: 11, marginTop: 1 }}>J1 Student</Text>
           </View>
         </View>
 
@@ -205,8 +220,8 @@ export default function ChatDetailScreen() {
             inverted
             ListEmptyComponent={
               <View className="flex-1 py-20 items-center justify-center" style={{ transform: [{ scaleY: -1 }] }}>
-                <Ionicons name="chatbubble-ellipses-outline" size={50} color="#BBE1FA20" />
-                <Text className="text-text-light opacity-40 text-center mt-4">
+                <Ionicons name="chatbubble-ellipses-outline" size={50} color="#BBE1FA15" />
+                <Text className="text-text-light opacity-30 text-center mt-4 text-sm">
                   Sohbeti başlatmak için ilk mesajı yazın!
                 </Text>
               </View>
@@ -226,7 +241,7 @@ export default function ChatDetailScreen() {
           >
             <Image
               source={{ uri: selectedImage }}
-              style={{ width: 80, height: 80, borderRadius: 10, borderWidth: 1, borderColor: '#3282B8' }}
+              style={{ width: 80, height: 80, borderRadius: 14, borderWidth: 2, borderColor: '#3282B8' }}
               resizeMode="cover"
             />
             <TouchableOpacity
@@ -236,11 +251,16 @@ export default function ChatDetailScreen() {
                 top: -6,
                 right: -6,
                 backgroundColor: '#E74C3C',
-                borderRadius: 10,
-                width: 20,
-                height: 20,
+                borderRadius: 12,
+                width: 22,
+                height: 22,
                 alignItems: 'center',
                 justifyContent: 'center',
+                shadowColor: '#E74C3C',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                elevation: 3,
               }}
             >
               <Ionicons name="close" size={12} color="#fff" />
@@ -249,29 +269,51 @@ export default function ChatDetailScreen() {
         )}
 
         {/* Mesaj Gönderme Barı */}
-        <View className="p-4 bg-bg-card border-t border-[#3282B820] flex-row items-center">
+        <View
+          style={{
+            padding: 14,
+            backgroundColor: '#0B3A5C',
+            borderTopWidth: 1,
+            borderTopColor: '#3282B815',
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}
+        >
           {/* 📷 Galeri Butonu */}
           <TouchableOpacity
             onPress={handlePickImage}
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: '#0F4C75',
+              width: 42,
+              height: 42,
+              borderRadius: 21,
+              backgroundColor: '#0F3460',
               alignItems: 'center',
               justifyContent: 'center',
-              marginRight: 8,
+              marginRight: 10,
               borderWidth: 1,
-              borderColor: '#3282B840',
+              borderColor: '#3282B830',
             }}
           >
             <Ionicons name="image-outline" size={20} color="#BBE1FA" />
           </TouchableOpacity>
 
-          <View className="flex-1 bg-bg-dark rounded-full px-4 py-2 border border-[#3282B830] flex-row items-center mr-3">
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: '#152238',
+              borderRadius: 22,
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              borderWidth: 1,
+              borderColor: '#3282B820',
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginRight: 10,
+            }}
+          >
             <TextInput
               placeholder="Mesaj yazın..."
-              placeholderTextColor="#BBE1FA40"
+              placeholderTextColor="#BBE1FA30"
               className="flex-1 text-text-light text-sm"
               value={inputText}
               onChangeText={setInputText}
@@ -281,12 +323,24 @@ export default function ChatDetailScreen() {
           <TouchableOpacity
             onPress={handleSend}
             disabled={!canSend}
-            className={`w-10 h-10 rounded-full items-center justify-center bg-brand-primary ${!canSend ? 'opacity-60' : ''}`}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: canSend ? '#3282B8' : '#3282B850',
+              shadowColor: canSend ? '#3282B8' : 'transparent',
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.4,
+              shadowRadius: 8,
+              elevation: canSend ? 4 : 0,
+            }}
           >
             {sending ? (
               <ActivityIndicator size="small" color="#BBE1FA" />
             ) : (
-              <Ionicons name="send" size={16} color="#BBE1FA" />
+              <Ionicons name="send" size={18} color="#BBE1FA" />
             )}
           </TouchableOpacity>
         </View>

@@ -145,19 +145,28 @@ export default function DashboardScreen() {
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 20 }}
+        contentContainerStyle={{ paddingBottom: 24 }}
       >
         {/* Header */}
-        <View className="px-5 pt-4 pb-2 flex-row items-center justify-between">
+        <View className="px-5 pt-5 pb-3 flex-row items-center justify-between">
           <View>
-            <Text className="text-text-light text-2xl font-bold">Merhaba 👋</Text>
-            <Text className="text-text-light opacity-60 text-sm mt-1">
+            <Text className="text-text-light text-2xl font-extrabold tracking-wide">Merhaba 👋</Text>
+            <Text className="text-text-light opacity-40 text-xs mt-1 tracking-wide">
               Work & Travel Asistanın
             </Text>
           </View>
           <TouchableOpacity 
             onPress={() => navigation.navigate("Profile" as never)}
-            className="w-10 h-10 rounded-full bg-brand-primary items-center justify-center overflow-hidden border-2 border-brand-primary"
+            className="w-11 h-11 rounded-full bg-brand-primary items-center justify-center overflow-hidden"
+            style={{
+              borderWidth: 2,
+              borderColor: '#3282B8',
+              shadowColor: '#3282B8',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.4,
+              shadowRadius: 8,
+              elevation: 6,
+            }}
           >
             {user?.profilePic ? (
               <Image source={{ uri: user.profilePic }} style={{ width: '100%', height: '100%' }} />
@@ -168,88 +177,132 @@ export default function DashboardScreen() {
         </View>
 
         {/* ── Exchange Rate Widget ────────────────────────────────────────────── */}
-        <View className="mx-5 mt-4 rounded-2xl bg-bg-card p-4 overflow-hidden">
-          <View className="flex-row justify-between items-center mb-3">
+        <View
+          style={{
+            marginHorizontal: 20,
+            marginTop: 12,
+            borderRadius: 20,
+            backgroundColor: '#0F4C75',
+            padding: 18,
+            overflow: 'hidden',
+            borderWidth: 1,
+            borderColor: '#3282B820',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 10,
+            elevation: 6,
+          }}
+        >
+          {/* Accent top line */}
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, backgroundColor: '#3282B8', borderTopLeftRadius: 20, borderTopRightRadius: 20 }} />
+          <View className="flex-row justify-between items-center mb-4">
             <View className="flex-row items-center gap-2">
               <Text className="text-2xl">💱</Text>
-              <Text className="text-text-light font-bold text-base">USD / TRY</Text>
+              <Text className="text-text-light font-extrabold text-base tracking-wide">USD / TRY</Text>
             </View>
-            <View className="bg-brand-primary rounded-full px-3 py-1">
-              <Text className="text-text-light text-xs font-semibold">{liveStatus}</Text>
+            <View style={{ backgroundColor: '#3282B8', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 }}>
+              <Text className="text-text-light text-xs font-bold" style={{ letterSpacing: 0.5 }}>{liveStatus}</Text>
             </View>
           </View>
-          <Text className="text-text-light text-4xl font-bold tracking-wider">
+          <Text className="text-text-light text-4xl font-extrabold tracking-wider">
             ₺ {usdTry.toFixed(2)}
           </Text>
-          <View className="flex-row items-center mt-2 gap-1">
+          <View className="flex-row items-center mt-3 gap-1">
             <Ionicons name="trending-up" size={14} color="#4ade80" />
-            <Text style={{ color: "#4ade80", fontSize: 12, fontWeight: "600" }}>
+            <Text style={{ color: "#4ade80", fontSize: 12, fontWeight: "700" }}>
               +0.18 (%0.47) bugün
             </Text>
           </View>
-          <Text className="text-text-light opacity-40 text-xs mt-2">
+          <Text className="text-text-light opacity-30 text-xs mt-3" style={{ letterSpacing: 0.3 }}>
             Son güncelleme: {updatedTime}
           </Text>
         </View>
 
         {/* ── Countdown Timer ─────────────────────────────────────────────────── */}
-        <View className="mx-5 mt-4 rounded-2xl bg-bg-card p-4">
+        <View
+          style={{
+            marginHorizontal: 20,
+            marginTop: 16,
+            borderRadius: 20,
+            backgroundColor: '#0F4C75',
+            padding: 18,
+            borderWidth: 1,
+            borderColor: '#3282B820',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 10,
+            elevation: 6,
+          }}
+        >
           <View className="flex-row items-center gap-2 mb-3">
             <Text className="text-2xl">✈️</Text>
-            <Text className="text-text-light font-bold text-base">Uçuşa Geri Sayım</Text>
+            <Text className="text-text-light font-extrabold text-base tracking-wide">Uçuşa Geri Sayım</Text>
           </View>
-          <Text className="text-text-light text-3xl font-bold tracking-widest mb-4">
+          <Text className="text-text-light text-3xl font-extrabold tracking-widest mb-4">
             {countdown}
           </Text>
-          <Text className="text-text-light opacity-60 text-xs mb-2">
+          <Text className="text-text-light opacity-50 text-xs mb-2" style={{ letterSpacing: 0.3 }}>
             Uçuş tarihinizi girin (YYYY-MM-DD)
           </Text>
           <View
             style={{
               borderWidth: 1,
-              borderColor: dateError ? "#f87171" : "#3282B880",
-              borderRadius: 12,
+              borderColor: dateError ? "#f87171" : "#3282B840",
+              borderRadius: 14,
               paddingHorizontal: 14,
-              paddingVertical: 10,
-              backgroundColor: "#1B262C",
+              paddingVertical: 12,
+              backgroundColor: "#152238",
             }}
           >
             <TextInput
               value={flightDateInput}
               onChangeText={handleDateChange}
               placeholder="2025-08-15"
-              placeholderTextColor="#BBE1FA40"
-              style={{ color: "#BBE1FA", fontSize: 16 }}
+              placeholderTextColor="#BBE1FA30"
+              style={{ color: "#BBE1FA", fontSize: 16, fontWeight: "600" }}
             />
           </View>
           {dateError ? (
-            <Text style={{ color: "#f87171", fontSize: 11, marginTop: 4 }}>{dateError}</Text>
+            <Text style={{ color: "#f87171", fontSize: 11, marginTop: 6 }}>{dateError}</Text>
           ) : null}
         </View>
 
         {/* ── Timezone Cards ──────────────────────────────────────────────────── */}
         <View className="px-5 mt-5">
-          <Text className="text-text-light font-bold text-base mb-3">
+          <Text className="text-text-light font-extrabold text-base mb-3 tracking-wide">
             🕐 ABD Şehirlerinde Saat
           </Text>
           <View className="flex-row flex-wrap gap-3">
             {times.map((tz) => (
               <View
                 key={tz.id}
-                className="rounded-2xl bg-bg-card p-4"
-                style={{ width: "47%" }}
+                style={{
+                  width: "47%",
+                  borderRadius: 18,
+                  backgroundColor: '#0F4C75',
+                  padding: 16,
+                  borderWidth: 1,
+                  borderColor: '#3282B815',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 6,
+                  elevation: 3,
+                }}
               >
                 <View className="flex-row items-center justify-between mb-2">
                   <Text className="text-2xl">{tz.emoji}</Text>
-                  <Text className="text-text-light opacity-60 text-xs">{tz.period}</Text>
+                  <Text className="text-text-light opacity-50 text-xs">{tz.period}</Text>
                 </View>
-                <Text className="text-text-light font-bold text-xl tracking-wider">
+                <Text className="text-text-light font-extrabold text-xl tracking-wider">
                   {tz.time}
                 </Text>
-                <Text className="text-text-light opacity-80 text-sm font-semibold mt-1">
+                <Text className="text-text-light opacity-70 text-sm font-bold mt-1">
                   {tz.city}
                 </Text>
-                <Text className="text-text-light opacity-50 text-xs">{tz.date}</Text>
+                <Text className="text-text-light opacity-40 text-xs mt-0.5">{tz.date}</Text>
               </View>
             ))}
           </View>
@@ -257,37 +310,42 @@ export default function DashboardScreen() {
 
         {/* ── İstanbul Saati ──────────────────────────────────────────────────── */}
         {istanbulTime && (
-          <View className="px-5 mt-4 mb-2">
-            <Text className="text-text-light font-bold text-base mb-3">
+          <View className="px-5 mt-5 mb-2">
+            <Text className="text-text-light font-extrabold text-base mb-3 tracking-wide">
               🇹🇷 Türkiye Saati
             </Text>
             <View
               style={{
-                borderRadius: 16,
+                borderRadius: 20,
                 backgroundColor: '#0F3460',
-                padding: 16,
+                padding: 18,
                 borderWidth: 1,
-                borderColor: '#3282B840',
+                borderColor: '#3282B830',
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.15,
+                shadowRadius: 8,
+                elevation: 4,
               }}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <Text style={{ fontSize: 32 }}>{istanbulTime.emoji}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                <Text style={{ fontSize: 34 }}>{istanbulTime.emoji}</Text>
                 <View>
-                  <Text style={{ color: '#BBE1FA', fontWeight: '800', fontSize: 22, letterSpacing: 1 }}>
+                  <Text style={{ color: '#BBE1FA', fontWeight: '800', fontSize: 24, letterSpacing: 2 }}>
                     {istanbulTime.time}
                   </Text>
-                  <Text style={{ color: '#BBE1FA', opacity: 0.7, fontWeight: '600', fontSize: 14, marginTop: 2 }}>
+                  <Text style={{ color: '#BBE1FA', opacity: 0.6, fontWeight: '700', fontSize: 14, marginTop: 2 }}>
                     {istanbulTime.city}
                   </Text>
-                  <Text style={{ color: '#BBE1FA', opacity: 0.4, fontSize: 12 }}>{istanbulTime.date}</Text>
+                  <Text style={{ color: '#BBE1FA', opacity: 0.35, fontSize: 12, marginTop: 1 }}>{istanbulTime.date}</Text>
                 </View>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
-                <Text style={{ color: '#BBE1FA', opacity: 0.4, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Yerel Saat</Text>
-                <Text style={{ fontSize: 22, marginTop: 4 }}>{istanbulTime.period}</Text>
+                <Text style={{ color: '#BBE1FA', opacity: 0.35, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: '700' }}>Yerel Saat</Text>
+                <Text style={{ fontSize: 24, marginTop: 6 }}>{istanbulTime.period}</Text>
               </View>
             </View>
           </View>

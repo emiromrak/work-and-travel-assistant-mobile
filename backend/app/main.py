@@ -20,16 +20,16 @@ except Exception as e:
     pass
 
 # --- 2. RATE LIMITER ---
-limiter = Limiter(key_func=get_remote_address)
+# Limiter artık routes.py üzerinden import ediliyor
+from app.routes import limiter
 
 # --- 3. UYGULAMA AYARLARI ---
 app = FastAPI(title="Mali's Journey API", version="1.0.0")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# --- 4. ROUTER DAHİL ET (limiter'ı route'lara ilet) ---
-from app.routes import router, set_limiter
-set_limiter(limiter)
+# --- 4. ROUTER DAHİL ET ---
+from app.routes import router
 app.include_router(router)
 
 # ==========================================

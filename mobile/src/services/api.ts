@@ -1,7 +1,5 @@
 const getBaseUrl = () => {
-  // Canlı (Production) Render sunucusu:
-  // Eğer backend'i Render üzerinde host ediyorsanız, direkt olarak Render URL'inizi buraya yazmalısınız.
-  // Örneğin: return 'https://sizin-proje-adiniz.onrender.com/api';
+
   return 'https://oasis-backend-pro.onrender.com/api';
 };
 

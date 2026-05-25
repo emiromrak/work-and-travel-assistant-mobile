@@ -173,9 +173,9 @@ export default function MapScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#1B262C" />
 
       {/* Header */}
-      <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 4 }}>
-        <Text style={{ color: "#BBE1FA", fontSize: 22, fontWeight: "800" }}>🗺️ Harita & Uçuşlar</Text>
-        <Text style={{ color: "#BBE1FA", opacity: 0.6, fontSize: 13, marginTop: 2 }}>
+      <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 6 }}>
+        <Text style={{ color: "#BBE1FA", fontSize: 22, fontWeight: "900", letterSpacing: 0.5 }}>🗺️ Harita & Uçuşlar</Text>
+        <Text style={{ color: "#BBE1FA", opacity: 0.4, fontSize: 12, marginTop: 3, letterSpacing: 0.3 }}>
           Şehir seç, uçuşları ve uzaklığı gör
         </Text>
       </View>
@@ -209,11 +209,16 @@ export default function MapScreen() {
           style={{
             marginHorizontal: 20,
             marginTop: 16,
-            borderRadius: 20,
+            borderRadius: 22,
             overflow: "hidden",
             height: 220,
             borderWidth: 1,
-            borderColor: "#3282B840",
+            borderColor: "#3282B830",
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 10,
+            elevation: 6,
           }}
         >
           <MapView
@@ -253,16 +258,21 @@ export default function MapScreen() {
             style={{
               marginHorizontal: 20,
               marginTop: 16,
-              borderRadius: 16,
+              borderRadius: 20,
               backgroundColor: "#0F3460",
-              padding: 16,
+              padding: 20,
               alignItems: "center",
               borderWidth: 1,
-              borderColor: "#3282B830",
+              borderColor: "#3282B820",
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 6,
+              elevation: 3,
             }}
           >
-            <Ionicons name="search-outline" size={28} color="#3282B880" />
-            <Text style={{ color: "#BBE1FA", opacity: 0.5, marginTop: 8, fontSize: 13, textAlign: "center" }}>
+            <Ionicons name="search-outline" size={28} color="#3282B860" />
+            <Text style={{ color: "#BBE1FA", opacity: 0.4, marginTop: 10, fontSize: 13, textAlign: "center" }}>
               Yukarıdan bir hedef şehir seç{"\n"}uzaklık, havalimanı ve uçuşlar görünür
             </Text>
           </View>
@@ -271,31 +281,36 @@ export default function MapScreen() {
             style={{
               marginHorizontal: 20,
               marginTop: 16,
-              borderRadius: 16,
+              borderRadius: 20,
               backgroundColor: "#0F3460",
-              padding: 16,
+              padding: 20,
               alignItems: "center",
               borderWidth: 1,
-              borderColor: "#3282B830",
+              borderColor: "#3282B820",
             }}
           >
-            <Text style={{ color: "#BBE1FA", opacity: 0.6, fontSize: 13 }}>📡 Mesafe hesaplanıyor...</Text>
+            <Text style={{ color: "#BBE1FA", opacity: 0.5, fontSize: 13 }}>📡 Mesafe hesaplanıyor...</Text>
           </View>
         ) : distanceInfo?.durum ? (
           <View
             style={{
               marginHorizontal: 20,
               marginTop: 16,
-              borderRadius: 16,
+              borderRadius: 20,
               backgroundColor: "#0F3460",
-              padding: 16,
+              padding: 18,
               borderWidth: 1,
-              borderColor: "#3282B840",
+              borderColor: "#3282B825",
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 4,
             }}
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <Ionicons name="navigate-circle-outline" size={22} color="#3282B8" />
-              <Text style={{ color: "#BBE1FA", fontWeight: "700", fontSize: 15 }}>Uzaklık & Konum</Text>
+              <Text style={{ color: "#BBE1FA", fontWeight: "800", fontSize: 15, letterSpacing: 0.3 }}>Uzaklık & Konum</Text>
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
               <View style={{ flex: 1 }}>
@@ -333,16 +348,21 @@ export default function MapScreen() {
             style={{
               marginHorizontal: 20,
               marginTop: 16,
-              borderRadius: 16,
+              borderRadius: 20,
               backgroundColor: "#0F3460",
-              padding: 16,
+              padding: 18,
               borderWidth: 1,
-              borderColor: "#3282B830",
+              borderColor: "#3282B820",
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 4,
             }}
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <Text style={{ fontSize: 18 }}>🛫</Text>
-              <Text style={{ color: "#BBE1FA", fontWeight: "700", fontSize: 15 }}>En Yakın Havalimanı</Text>
+              <Text style={{ color: "#BBE1FA", fontWeight: "800", fontSize: 15, letterSpacing: 0.3 }}>En Yakın Havalimanı</Text>
             </View>
             {airports.map((airport, index) => (
               <View
@@ -365,12 +385,17 @@ export default function MapScreen() {
                 <View
                   style={{
                     backgroundColor: "#3282B8",
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                    borderRadius: 8,
+                    paddingHorizontal: 12,
+                    paddingVertical: 5,
+                    borderRadius: 10,
+                    shadowColor: '#3282B8',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 2,
                   }}
                 >
-                  <Text style={{ color: "#BBE1FA", fontWeight: "800", fontSize: 13 }}>{airport.code}</Text>
+                  <Text style={{ color: "#BBE1FA", fontWeight: "900", fontSize: 13, letterSpacing: 0.5 }}>{airport.code}</Text>
                 </View>
               </View>
             ))}
@@ -381,7 +406,7 @@ export default function MapScreen() {
         {flights.length > 0 && (
           <View style={{ paddingHorizontal: 20, marginTop: 16 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              <Text style={{ color: "#BBE1FA", fontWeight: "700", fontSize: 15 }}>💸 En Ucuz Uçuş Rotaları</Text>
+              <Text style={{ color: "#BBE1FA", fontWeight: "800", fontSize: 15, letterSpacing: 0.3 }}>💸 En Ucuz Uçuş Rotaları</Text>
               <View
                 style={{
                   backgroundColor: "#0F4C75",
@@ -400,12 +425,17 @@ export default function MapScreen() {
                 <View
                   key={flight.id}
                   style={{
-                    borderRadius: 16,
+                    borderRadius: 20,
                     backgroundColor: "#0F3460",
-                    padding: 16,
+                    padding: 18,
                     marginBottom: 12,
-                    borderWidth: isCheapest ? 1 : 0,
-                    borderColor: "#4ade80",
+                    borderWidth: isCheapest ? 2 : 1,
+                    borderColor: isCheapest ? "#4ade80" : "#3282B815",
+                    shadowColor: isCheapest ? '#4ade80' : '#000',
+                    shadowOffset: { width: 0, height: 3 },
+                    shadowOpacity: isCheapest ? 0.2 : 0.1,
+                    shadowRadius: 8,
+                    elevation: isCheapest ? 5 : 2,
                   }}
                 >
                   {isCheapest && (

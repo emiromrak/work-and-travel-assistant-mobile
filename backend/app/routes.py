@@ -60,13 +60,11 @@ groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 # --- ROUTER ---
 router = APIRouter(prefix="/api")
 
-# Rate limiter (main.py'den inject edilir)
-_limiter = None
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
-def set_limiter(lim):
-    """main.py tarafından çağrılır; rate limiter'ı route'lara bağlar."""
-    global _limiter
-    _limiter = lim
+# Rate limiter tanımı
+limiter = Limiter(key_func=get_remote_address)
 
 
 # ==========================================
@@ -114,11 +112,9 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
     return {"status": "success", "message": f"Hoş geldin {new_user.username}!", "user_id": new_user.id}
 
 @router.post("/login")
+@limiter.limit("5/minute")
 async def login_user(request: Request, credentials: UserLogin, db: Session = Depends(get_db)):
-    # 🛡️ Rate limiting: aynı IP'den 1 dakikada max 5 giriş denemesi
-    limiter = getattr(request.app.state, "limiter", None)
-    if limiter:
-        limiter.limit("5/minute")(lambda r: None)(request)
+    # 🛡️ Rate limiting: aynı IP'den 1 dakikada max 5 giriş denemesi decorator ile sağlandı.
     user = db.query(User).filter(User.email == credentials.email).first()
     if not user or not bcrypt.checkpw(credentials.password.encode('utf-8'), user.hashed_password.encode('utf-8')):
         raise HTTPException(status_code=401, detail="Email veya şifre yanlış!")

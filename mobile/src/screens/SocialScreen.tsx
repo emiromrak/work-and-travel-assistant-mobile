@@ -170,62 +170,67 @@ export default function SocialScreen() {
   const renderPostItem = ({ item }: { item: Post }) => (
     <View
       style={{
-        backgroundColor: '#1A2F45',
+        backgroundColor: '#0F4C75',
         borderWidth: 1,
-        borderColor: '#3282B820',
-        borderRadius: 16,
+        borderColor: '#3282B815',
+        borderRadius: 20,
         marginBottom: 16,
         overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 4,
       }}
     >
       {/* Kullanıcı Bilgisi */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 14, paddingBottom: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, paddingBottom: 10 }}>
         {item.profile_pic ? (
           <Image
             source={{ uri: item.profile_pic }}
-            style={{ width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#3282B8' }}
+            style={{ width: 42, height: 42, borderRadius: 21, borderWidth: 2, borderColor: '#3282B8' }}
           />
         ) : (
           <View
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: '#0F4C75',
+              width: 42,
+              height: 42,
+              borderRadius: 21,
+              backgroundColor: '#0F3460',
               alignItems: 'center',
               justifyContent: 'center',
-              borderWidth: 1,
+              borderWidth: 2,
               borderColor: '#3282B8',
             }}
           >
             <Ionicons name="person" size={18} color="#BBE1FA" />
           </View>
         )}
-        <View style={{ marginLeft: 10, flex: 1 }}>
-          <Text style={{ color: '#BBE1FA', fontWeight: 'bold', fontSize: 13 }}>{item.username}</Text>
+        <View style={{ marginLeft: 12, flex: 1 }}>
+          <Text style={{ color: '#BBE1FA', fontWeight: '800', fontSize: 14 }}>{item.username}</Text>
           {/* 📍 Konum Badge */}
           {item.location_name ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
               <Ionicons name="location" size={11} color="#3282B8" />
-              <Text style={{ color: '#3282B8', fontSize: 11, marginLeft: 2 }}>{item.location_name}</Text>
+              <Text style={{ color: '#3282B8', fontSize: 11, marginLeft: 3, fontWeight: '600' }}>{item.location_name}</Text>
             </View>
           ) : (
-            <Text style={{ color: '#BBE1FA', opacity: 0.4, fontSize: 11, marginTop: 2 }}>J1 Student</Text>
+            <Text style={{ color: '#BBE1FA', opacity: 0.35, fontSize: 11, marginTop: 2 }}>J1 Student</Text>
           )}
         </View>
       </View>
 
       {/* Post Başlık & İçerik */}
-      <View style={{ paddingHorizontal: 14, paddingBottom: item.image_url ? 0 : 14 }}>
-        <Text style={{ color: '#BBE1FA', fontWeight: 'bold', fontSize: 15, marginBottom: 4 }}>{item.title}</Text>
-        <Text style={{ color: '#BBE1FA', opacity: 0.8, fontSize: 13, lineHeight: 19 }}>{item.content}</Text>
+      <View style={{ paddingHorizontal: 16, paddingBottom: item.image_url ? 0 : 16 }}>
+        <Text style={{ color: '#BBE1FA', fontWeight: '800', fontSize: 15, marginBottom: 4 }}>{item.title}</Text>
+        <Text style={{ color: '#BBE1FA', opacity: 0.7, fontSize: 13, lineHeight: 20 }}>{item.content}</Text>
       </View>
 
       {/* 📸 Post Görseli */}
       {item.image_url ? (
         <Image
           source={{ uri: item.image_url }}
-          style={{ width: '100%', height: 220, marginTop: 10 }}
+          style={{ width: '100%', height: 220, marginTop: 12 }}
           resizeMode="cover"
         />
       ) : null}
@@ -239,10 +244,13 @@ export default function SocialScreen() {
         className="flex-1"
       >
         {/* Header */}
-        <View className="px-5 pt-4 pb-2 flex-row justify-between items-center border-b border-[#3282B820]">
+        <View
+          className="px-5 pt-5 pb-3 flex-row justify-between items-center"
+          style={{ borderBottomWidth: 1, borderBottomColor: '#3282B815' }}
+        >
           <View>
-            <Text className="text-text-light text-2xl font-bold">🌍 Sosyal Akış</Text>
-            <Text className="text-text-light opacity-60 text-xs mt-1">
+            <Text className="text-text-light text-2xl font-extrabold tracking-wide">🌍 Sosyal Akış</Text>
+            <Text className="text-text-light opacity-40 text-xs mt-1 tracking-wide">
               Amerika'daki J1 öğrencilerinin paylaşımları
             </Text>
           </View>
@@ -251,7 +259,19 @@ export default function SocialScreen() {
               if (showForm) resetForm();
               setShowForm(!showForm);
             }}
-            className="bg-brand-primary w-10 h-10 rounded-full items-center justify-center shadow-lg"
+            style={{
+              backgroundColor: '#3282B8',
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              alignItems: 'center',
+              justifyContent: 'center',
+              shadowColor: '#3282B8',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.35,
+              shadowRadius: 10,
+              elevation: 6,
+            }}
           >
             <Ionicons name={showForm ? 'close' : 'add'} size={24} color="#BBE1FA" />
           </TouchableOpacity>
@@ -266,33 +286,38 @@ export default function SocialScreen() {
           >
             <View
               style={{
-                backgroundColor: '#1A2F45',
-                borderRadius: 16,
-                padding: 16,
+                backgroundColor: '#0F4C75',
+                borderRadius: 20,
+                padding: 18,
                 borderWidth: 1,
-                borderColor: '#3282B840',
+                borderColor: '#3282B820',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 10,
+                elevation: 5,
               }}
             >
-              <Text style={{ color: '#BBE1FA', fontWeight: 'bold', fontSize: 15, marginBottom: 12 }}>
+              <Text style={{ color: '#BBE1FA', fontWeight: '800', fontSize: 16, marginBottom: 14 }}>
                 Yeni Paylaşım Yap
               </Text>
 
               {/* Başlık */}
               <View
                 style={{
-                  backgroundColor: '#0D2136',
-                  borderRadius: 10,
+                  backgroundColor: '#152238',
+                  borderRadius: 14,
                   paddingHorizontal: 14,
-                  paddingVertical: 10,
+                  paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: '#3282B830',
+                  borderColor: '#3282B820',
                   marginBottom: 10,
                 }}
               >
                 <TextInput
                   placeholder="Konu Başlığı"
-                  placeholderTextColor="#BBE1FA40"
-                  style={{ color: '#BBE1FA', fontSize: 13, fontWeight: '600' }}
+                  placeholderTextColor="#BBE1FA30"
+                  style={{ color: '#BBE1FA', fontSize: 14, fontWeight: '700' }}
                   value={title}
                   onChangeText={setTitle}
                 />
@@ -301,18 +326,18 @@ export default function SocialScreen() {
               {/* İçerik */}
               <View
                 style={{
-                  backgroundColor: '#0D2136',
-                  borderRadius: 10,
+                  backgroundColor: '#152238',
+                  borderRadius: 14,
                   paddingHorizontal: 14,
-                  paddingVertical: 10,
+                  paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: '#3282B830',
-                  marginBottom: 12,
+                  borderColor: '#3282B820',
+                  marginBottom: 14,
                 }}
               >
                 <TextInput
                   placeholder="Ne paylaşmak istersin? (Konaklama, araba arayışı, parti vb.)"
-                  placeholderTextColor="#BBE1FA40"
+                  placeholderTextColor="#BBE1FA30"
                   style={{ color: '#BBE1FA', fontSize: 13, height: 80, textAlignVertical: 'top' }}
                   multiline
                   numberOfLines={4}
@@ -322,7 +347,7 @@ export default function SocialScreen() {
               </View>
 
               {/* 📸 Fotoğraf Seç & 📍 Konum Ekle Butonları */}
-              <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
                 <TouchableOpacity
                   onPress={handlePickImage}
                   style={{
@@ -330,20 +355,20 @@ export default function SocialScreen() {
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: selectedImage ? '#0F4C75' : '#0D2136',
-                    borderRadius: 10,
-                    paddingVertical: 10,
+                    backgroundColor: selectedImage ? '#0F3460' : '#152238',
+                    borderRadius: 14,
+                    paddingVertical: 12,
                     borderWidth: 1,
-                    borderColor: selectedImage ? '#3282B8' : '#3282B830',
+                    borderColor: selectedImage ? '#3282B8' : '#3282B820',
                     gap: 6,
                   }}
                 >
                   <Ionicons
                     name={selectedImage ? 'image' : 'image-outline'}
                     size={16}
-                    color={selectedImage ? '#3282B8' : '#BBE1FA80'}
+                    color={selectedImage ? '#3282B8' : '#BBE1FA60'}
                   />
-                  <Text style={{ color: selectedImage ? '#3282B8' : '#BBE1FA80', fontSize: 12, fontWeight: '600' }}>
+                  <Text style={{ color: selectedImage ? '#3282B8' : '#BBE1FA60', fontSize: 12, fontWeight: '700' }}>
                     {selectedImage ? 'Fotoğraf Seçildi ✓' : 'Fotoğraf Ekle'}
                   </Text>
                 </TouchableOpacity>
@@ -356,11 +381,11 @@ export default function SocialScreen() {
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: locationName ? '#0F4C75' : '#0D2136',
-                    borderRadius: 10,
-                    paddingVertical: 10,
+                    backgroundColor: locationName ? '#0F3460' : '#152238',
+                    borderRadius: 14,
+                    paddingVertical: 12,
                     borderWidth: 1,
-                    borderColor: locationName ? '#3282B8' : '#3282B830',
+                    borderColor: locationName ? '#3282B8' : '#3282B820',
                     gap: 6,
                   }}
                 >
@@ -371,9 +396,9 @@ export default function SocialScreen() {
                       <Ionicons
                         name={locationName ? 'location' : 'location-outline'}
                         size={16}
-                        color={locationName ? '#3282B8' : '#BBE1FA80'}
+                        color={locationName ? '#3282B8' : '#BBE1FA60'}
                       />
-                      <Text style={{ color: locationName ? '#3282B8' : '#BBE1FA80', fontSize: 12, fontWeight: '600' }}>
+                      <Text style={{ color: locationName ? '#3282B8' : '#BBE1FA60', fontSize: 12, fontWeight: '700' }}>
                         {locationName ? 'Konum Eklendi ✓' : 'Konum Ekle'}
                       </Text>
                     </>
@@ -383,24 +408,29 @@ export default function SocialScreen() {
 
               {/* Seçili Fotoğraf Önizleme */}
               {selectedImage && (
-                <View style={{ marginBottom: 10, position: 'relative' }}>
+                <View style={{ marginBottom: 12, position: 'relative' }}>
                   <Image
                     source={{ uri: selectedImage }}
-                    style={{ width: '100%', height: 140, borderRadius: 10 }}
+                    style={{ width: '100%', height: 140, borderRadius: 14 }}
                     resizeMode="cover"
                   />
                   <TouchableOpacity
                     onPress={() => setSelectedImage(null)}
                     style={{
                       position: 'absolute',
-                      top: 6,
-                      right: 6,
+                      top: 8,
+                      right: 8,
                       backgroundColor: '#E74C3C',
-                      borderRadius: 12,
-                      width: 24,
-                      height: 24,
+                      borderRadius: 14,
+                      width: 26,
+                      height: 26,
                       alignItems: 'center',
                       justifyContent: 'center',
+                      shadowColor: '#E74C3C',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 4,
+                      elevation: 3,
                     }}
                   >
                     <Ionicons name="close" size={14} color="#fff" />
@@ -414,20 +444,20 @@ export default function SocialScreen() {
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    backgroundColor: '#0D2136',
-                    borderRadius: 8,
-                    paddingHorizontal: 10,
-                    paddingVertical: 6,
-                    marginBottom: 10,
+                    backgroundColor: '#152238',
+                    borderRadius: 12,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    marginBottom: 12,
                     borderWidth: 1,
-                    borderColor: '#3282B840',
+                    borderColor: '#3282B830',
                     gap: 6,
                   }}
                 >
                   <Ionicons name="location" size={14} color="#3282B8" />
-                  <Text style={{ color: '#3282B8', fontSize: 12, flex: 1 }}>{locationName}</Text>
+                  <Text style={{ color: '#3282B8', fontSize: 12, flex: 1, fontWeight: '600' }}>{locationName}</Text>
                   <TouchableOpacity onPress={() => { setLocationName(null); setLocationCoords(null); }}>
-                    <Ionicons name="close-circle" size={16} color="#BBE1FA50" />
+                    <Ionicons name="close-circle" size={16} color="#BBE1FA40" />
                   </TouchableOpacity>
                 </View>
               )}
@@ -438,19 +468,24 @@ export default function SocialScreen() {
                 disabled={submitting}
                 style={{
                   backgroundColor: '#3282B8',
-                  borderRadius: 10,
-                  paddingVertical: 12,
+                  borderRadius: 14,
+                  paddingVertical: 14,
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexDirection: 'row',
                   gap: 8,
+                  shadowColor: '#3282B8',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 5,
                 }}
               >
                 {submitting ? (
                   <ActivityIndicator color="#BBE1FA" />
                 ) : (
                   <>
-                    <Text style={{ color: '#BBE1FA', fontWeight: 'bold', fontSize: 14 }}>Paylaş</Text>
+                    <Text style={{ color: '#BBE1FA', fontWeight: '800', fontSize: 15 }}>Paylaş</Text>
                     <Ionicons name="send" size={14} color="#BBE1FA" />
                   </>
                 )}
@@ -475,8 +510,8 @@ export default function SocialScreen() {
             }
             ListEmptyComponent={
               <View className="flex-1 py-20 items-center justify-center">
-                <Ionicons name="chatbubbles-outline" size={60} color="#BBE1FA30" />
-                <Text className="text-text-light opacity-40 text-center mt-4">
+                <Ionicons name="chatbubbles-outline" size={60} color="#BBE1FA20" />
+                <Text className="text-text-light opacity-30 text-center mt-4 text-sm">
                   Henüz paylaşım yapılmamış.{'\n'}İlk paylaşımı sen yap!
                 </Text>
               </View>

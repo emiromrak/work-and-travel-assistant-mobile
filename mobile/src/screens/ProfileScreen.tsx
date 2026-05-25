@@ -187,13 +187,19 @@ export default function ProfileScreen() {
           flexDirection: 'row',
           alignItems: 'center',
           borderBottomWidth: 1,
-          borderBottomColor: '#3282B830',
+          borderBottomColor: '#3282B815',
+          backgroundColor: '#0B3A5C',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.2,
+          shadowRadius: 6,
+          elevation: 4,
         }}
       >
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 16 }}>
           <Ionicons name="arrow-back" size={24} color="#BBE1FA" />
         </TouchableOpacity>
-        <Text style={{ color: '#BBE1FA', fontSize: 20, fontWeight: '800', flex: 1 }}>Profilim</Text>
+        <Text style={{ color: '#BBE1FA', fontSize: 20, fontWeight: '900', flex: 1, letterSpacing: 0.5 }}>Profilim</Text>
       </View>
 
       <ScrollView
@@ -202,12 +208,18 @@ export default function ProfileScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* ── Profil Fotoğrafı ─────────────────────────────────────────────── */}
-        <View style={{ alignItems: 'center', marginBottom: 28 }}>
+        <View style={{ alignItems: 'center', marginBottom: 30 }}>
           <TouchableOpacity onPress={pickImage} disabled={loading} style={{ position: 'relative' }}>
             {user.profilePic ? (
               <Image
                 source={{ uri: user.profilePic }}
-                style={{ width: 120, height: 120, borderRadius: 60, borderWidth: 3, borderColor: '#3282B8' }}
+                style={{
+                  width: 120,
+                  height: 120,
+                  borderRadius: 60,
+                  borderWidth: 3,
+                  borderColor: '#3282B8',
+                }}
               />
             ) : (
               <View
@@ -222,9 +234,23 @@ export default function ProfileScreen() {
                   borderColor: '#3282B8',
                 }}
               >
-                <Ionicons name="person" size={56} color="#BBE1FA50" />
+                <Ionicons name="person" size={56} color="#BBE1FA40" />
               </View>
             )}
+
+            {/* Ring glow effect */}
+            <View
+              style={{
+                position: 'absolute',
+                top: -4,
+                left: -4,
+                right: -4,
+                bottom: -4,
+                borderRadius: 64,
+                borderWidth: 2,
+                borderColor: '#3282B830',
+              }}
+            />
 
             {/* Kamera ikonu */}
             <View
@@ -233,13 +259,18 @@ export default function ProfileScreen() {
                 bottom: 0,
                 right: 0,
                 backgroundColor: '#3282B8',
-                width: 36,
-                height: 36,
-                borderRadius: 18,
+                width: 38,
+                height: 38,
+                borderRadius: 19,
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderWidth: 3,
                 borderColor: '#1B262C',
+                shadowColor: '#3282B8',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.4,
+                shadowRadius: 6,
+                elevation: 4,
               }}
             >
               {loading ? (
@@ -250,7 +281,7 @@ export default function ProfileScreen() {
             </View>
           </TouchableOpacity>
 
-          <Text style={{ color: '#BBE1FA', opacity: 0.5, fontSize: 12, marginTop: 10 }}>
+          <Text style={{ color: '#BBE1FA', opacity: 0.4, fontSize: 12, marginTop: 12, letterSpacing: 0.3 }}>
             Değiştirmek için dokun
           </Text>
         </View>
@@ -259,12 +290,17 @@ export default function ProfileScreen() {
         <View
           style={{
             backgroundColor: '#0F3460',
-            borderRadius: 20,
-            padding: 20,
+            borderRadius: 24,
+            padding: 22,
             borderWidth: 1,
-            borderColor: '#3282B830',
+            borderColor: '#3282B820',
             marginBottom: 16,
-            gap: 16,
+            gap: 18,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.15,
+            shadowRadius: 8,
+            elevation: 4,
           }}
         >
           {/* Kullanıcı Adı */}
@@ -341,13 +377,18 @@ export default function ProfileScreen() {
           disabled={saving}
           style={{
             backgroundColor: '#3282B8',
-            borderRadius: 16,
+            borderRadius: 18,
             paddingVertical: 16,
             alignItems: 'center',
             flexDirection: 'row',
             justifyContent: 'center',
             marginBottom: 12,
             opacity: saving ? 0.6 : 1,
+            shadowColor: '#3282B8',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 10,
+            elevation: 5,
           }}
         >
           {saving ? (
@@ -364,14 +405,14 @@ export default function ProfileScreen() {
         <TouchableOpacity
           onPress={handleLogout}
           style={{
-            borderRadius: 16,
+            borderRadius: 18,
             paddingVertical: 16,
             alignItems: 'center',
             flexDirection: 'row',
             justifyContent: 'center',
             borderWidth: 1,
-            borderColor: '#ef444450',
-            backgroundColor: '#ef444415',
+            borderColor: '#ef444440',
+            backgroundColor: '#ef444412',
             marginBottom: 12,
           }}
         >
@@ -380,19 +421,19 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         {/* ── Hesabı Sil ───────────────────────────────────────────────────── */}
-        <View style={{ borderTopWidth: 1, borderTopColor: '#3282B820', paddingTop: 16, marginBottom: 20 }}>
+        <View style={{ borderTopWidth: 1, borderTopColor: '#3282B815', paddingTop: 18, marginBottom: 20 }}>
           <TouchableOpacity
             onPress={handleDeleteAccount}
             disabled={deleting}
             style={{
-              borderRadius: 16,
+              borderRadius: 18,
               paddingVertical: 16,
               alignItems: 'center',
               flexDirection: 'row',
               justifyContent: 'center',
               borderWidth: 1,
-              borderColor: '#7f1d1d50',
-              backgroundColor: '#7f1d1d15',
+              borderColor: '#7f1d1d40',
+              backgroundColor: '#7f1d1d12',
               opacity: deleting ? 0.6 : 1,
             }}
           >

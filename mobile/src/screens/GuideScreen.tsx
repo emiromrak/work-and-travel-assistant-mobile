@@ -23,19 +23,26 @@ function AccordionSection({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <View className="mb-3">
+    <View style={{ marginBottom: 12 }}>
       <TouchableOpacity
         onPress={() => setOpen((p) => !p)}
         style={{
           backgroundColor: "#0F4C75",
-          borderRadius: 14,
-          padding: 14,
+          borderRadius: 16,
+          padding: 16,
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
+          borderWidth: 1,
+          borderColor: "#3282B815",
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 2,
         }}
       >
-        <Text style={{ color: "#BBE1FA", fontWeight: "700", fontSize: 14 }}>{title}</Text>
+        <Text style={{ color: "#BBE1FA", fontWeight: "800", fontSize: 14, letterSpacing: 0.3 }}>{title}</Text>
         <Ionicons
           name={open ? "chevron-up" : "chevron-down"}
           size={18}
@@ -45,11 +52,14 @@ function AccordionSection({
       {open && (
         <View
           style={{
-            backgroundColor: "#0F4C7590",
-            borderBottomLeftRadius: 14,
-            borderBottomRightRadius: 14,
-            padding: 14,
-            marginTop: -4,
+            backgroundColor: "#0F4C7570",
+            borderBottomLeftRadius: 16,
+            borderBottomRightRadius: 16,
+            padding: 16,
+            marginTop: -6,
+            borderWidth: 1,
+            borderTopWidth: 0,
+            borderColor: "#3282B810",
           }}
         >
           {children}
@@ -65,12 +75,17 @@ function AiBubble({ text }: { text: string }) {
     <View className="flex-row items-start gap-2 mb-3">
       <View
         style={{
-          width: 32,
-          height: 32,
-          borderRadius: 16,
+          width: 34,
+          height: 34,
+          borderRadius: 17,
           backgroundColor: "#3282B8",
           alignItems: "center",
           justifyContent: "center",
+          shadowColor: '#3282B8',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.3,
+          shadowRadius: 6,
+          elevation: 3,
         }}
       >
         <Text style={{ fontSize: 16 }}>🤖</Text>
@@ -79,12 +94,14 @@ function AiBubble({ text }: { text: string }) {
         style={{
           flex: 1,
           backgroundColor: "#0F4C75",
-          borderRadius: 14,
+          borderRadius: 16,
           borderTopLeftRadius: 4,
-          padding: 12,
+          padding: 14,
+          borderWidth: 1,
+          borderColor: "#3282B815",
         }}
       >
-        <Text style={{ color: "#BBE1FA", fontSize: 13, lineHeight: 19 }}>{text}</Text>
+        <Text style={{ color: "#BBE1FA", fontSize: 13, lineHeight: 20 }}>{text}</Text>
       </View>
     </View>
   );
@@ -99,9 +116,9 @@ export default function GuideScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#1B262C" />
 
       {/* Header */}
-      <View className="px-5 pt-4 pb-2">
-        <Text className="text-text-light text-2xl font-bold">🤖 AI Şehir Rehberi</Text>
-        <Text className="text-text-light opacity-60 text-sm mt-1">
+      <View className="px-5 pt-5 pb-3">
+        <Text className="text-text-light text-2xl font-extrabold tracking-wide">🤖 AI Şehir Rehberi</Text>
+        <Text className="text-text-light opacity-40 text-xs mt-1 tracking-wide">
           W&T için kişiselleştirilmiş şehir rehberleri
         </Text>
       </View>
@@ -116,15 +133,20 @@ export default function GuideScreen() {
                 key={city.id}
                 onPress={() => setSelectedId(city.id)}
                 style={{
-                  paddingHorizontal: 14,
-                  paddingVertical: 9,
-                  borderRadius: 20,
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  borderRadius: 22,
                   backgroundColor: active ? "#3282B8" : "#0F4C75",
                   borderWidth: 1,
-                  borderColor: active ? "#3282B8" : "#3282B830",
+                  borderColor: active ? "#3282B8" : "#3282B820",
                   flexDirection: "row",
                   alignItems: "center",
                   gap: 6,
+                  shadowColor: active ? '#3282B8' : 'transparent',
+                  shadowOffset: { width: 0, height: active ? 3 : 0 },
+                  shadowOpacity: active ? 0.3 : 0,
+                  shadowRadius: active ? 8 : 0,
+                  elevation: active ? 4 : 0,
                 }}
               >
                 <Text style={{ fontSize: 16 }}>{city.emoji}</Text>
@@ -132,7 +154,8 @@ export default function GuideScreen() {
                   style={{
                     color: "#BBE1FA",
                     fontSize: 13,
-                    fontWeight: active ? "700" : "400",
+                    fontWeight: active ? "800" : "500",
+                    letterSpacing: active ? 0.3 : 0,
                   }}
                 >
                   {city.city}
@@ -152,57 +175,66 @@ export default function GuideScreen() {
           {/* City Hero Card */}
           <View
             style={{
-              borderRadius: 20,
+              borderRadius: 24,
               backgroundColor: "#0F4C75",
-              padding: 18,
-              marginBottom: 16,
+              padding: 20,
+              marginBottom: 18,
               borderWidth: 1,
-              borderColor: "#3282B840",
+              borderColor: "#3282B820",
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 10,
+              elevation: 5,
             }}
           >
-            <View className="flex-row items-center gap-3 mb-3">
-              <Text style={{ fontSize: 40 }}>{guide.emoji}</Text>
+            <View className="flex-row items-center gap-3 mb-4">
+              <Text style={{ fontSize: 44 }}>{guide.emoji}</Text>
               <View>
-                <Text style={{ color: "#BBE1FA", fontSize: 22, fontWeight: "800" }}>
+                <Text style={{ color: "#BBE1FA", fontSize: 24, fontWeight: "900", letterSpacing: 0.5 }}>
                   {guide.city}
                 </Text>
-                <Text style={{ color: "#BBE1FA80", fontSize: 13 }}>{guide.state}</Text>
+                <Text style={{ color: "#BBE1FA60", fontSize: 13, fontWeight: "600" }}>{guide.state}</Text>
               </View>
             </View>
             <View className="flex-row gap-3">
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: "#1B262C",
-                  borderRadius: 12,
-                  padding: 10,
+                  backgroundColor: "#152238",
+                  borderRadius: 16,
+                  padding: 14,
                   alignItems: "center",
+                  borderWidth: 1,
+                  borderColor: "#3282B815",
                 }}
               >
-                <Text style={{ color: "#4ade80", fontWeight: "800", fontSize: 18 }}>
+                <Text style={{ color: "#4ade80", fontWeight: "900", fontSize: 20 }}>
                   ${guide.minWage}
                 </Text>
-                <Text style={{ color: "#BBE1FA60", fontSize: 11 }}>Min. ücret/saat</Text>
+                <Text style={{ color: "#BBE1FA50", fontSize: 11, marginTop: 2, fontWeight: '600' }}>Min. ücret/saat</Text>
               </View>
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: "#1B262C",
-                  borderRadius: 12,
-                  padding: 10,
+                  backgroundColor: "#152238",
+                  borderRadius: 16,
+                  padding: 14,
                   alignItems: "center",
+                  borderWidth: 1,
+                  borderColor: "#3282B815",
                 }}
               >
-                <Text style={{ color: "#fbbf24", fontWeight: "800", fontSize: 18 }}>
+                <Text style={{ color: "#fbbf24", fontWeight: "900", fontSize: 20 }}>
                   ${guide.avgMonthlyCost}
                 </Text>
-                <Text style={{ color: "#BBE1FA60", fontSize: 11 }}>Aylık ort. gider</Text>
+                <Text style={{ color: "#BBE1FA50", fontSize: 11, marginTop: 2, fontWeight: '600' }}>Aylık ort. gider</Text>
               </View>
             </View>
           </View>
 
           {/* AI Overview Bubble */}
-          <Text style={{ color: "#BBE1FA", fontWeight: "700", marginBottom: 10, fontSize: 14 }}>
+          <Text style={{ color: "#BBE1FA", fontWeight: "800", marginBottom: 12, fontSize: 15, letterSpacing: 0.3 }}>
             💬 AI Genel Bakış
           </Text>
           <AiBubble text={guide.overview} />
@@ -212,7 +244,7 @@ export default function GuideScreen() {
             {guide.highlights.map((h, i) => (
               <View key={i} className="flex-row items-start gap-2 mb-2">
                 <Ionicons name="checkmark-circle" size={16} color="#4ade80" style={{ marginTop: 2 }} />
-                <Text style={{ color: "#BBE1FA", fontSize: 13, flex: 1, lineHeight: 18 }}>{h}</Text>
+                <Text style={{ color: "#BBE1FA", fontSize: 13, flex: 1, lineHeight: 19 }}>{h}</Text>
               </View>
             ))}
           </AccordionSection>
@@ -226,25 +258,25 @@ export default function GuideScreen() {
                   flexDirection: "row",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  paddingVertical: 8,
+                  paddingVertical: 10,
                   borderBottomWidth: i < guide.restaurants.length - 1 ? 1 : 0,
-                  borderBottomColor: "#3282B830",
+                  borderBottomColor: "#3282B820",
                 }}
               >
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: "#BBE1FA", fontWeight: "600", fontSize: 13 }}>
+                  <Text style={{ color: "#BBE1FA", fontWeight: "700", fontSize: 13 }}>
                     {r.name}
                   </Text>
-                  <Text style={{ color: "#BBE1FA60", fontSize: 11 }}>
+                  <Text style={{ color: "#BBE1FA50", fontSize: 11, marginTop: 2 }}>
                     {r.type} • ⭐ {r.rating}
                   </Text>
                 </View>
                 <View style={{ alignItems: "flex-end" }}>
-                  <Text style={{ color: "#4ade80", fontWeight: "700", fontSize: 13 }}>
+                  <Text style={{ color: "#4ade80", fontWeight: "800", fontSize: 13 }}>
                     {r.avgPrice}
                   </Text>
                   {r.studentFriendly && (
-                    <Text style={{ color: "#3282B8", fontSize: 10, fontWeight: "600" }}>
+                    <Text style={{ color: "#3282B8", fontSize: 10, fontWeight: "700", marginTop: 1 }}>
                       Öğrenci dostu ✓
                     </Text>
                   )}
@@ -259,21 +291,23 @@ export default function GuideScreen() {
               <View
                 key={i}
                 style={{
-                  backgroundColor: "#1B262C",
-                  borderRadius: 10,
-                  padding: 12,
+                  backgroundColor: "#152238",
+                  borderRadius: 14,
+                  padding: 14,
                   marginBottom: 8,
+                  borderWidth: 1,
+                  borderColor: "#3282B810",
                 }}
               >
                 <View className="flex-row justify-between items-center mb-1">
-                  <Text style={{ color: "#BBE1FA", fontWeight: "700", fontSize: 13 }}>
+                  <Text style={{ color: "#BBE1FA", fontWeight: "800", fontSize: 13 }}>
                     {tip.category}
                   </Text>
-                  <Text style={{ color: "#4ade80", fontWeight: "700", fontSize: 12 }}>
+                  <Text style={{ color: "#4ade80", fontWeight: "800", fontSize: 12 }}>
                     {tip.monthlyCost}
                   </Text>
                 </View>
-                <Text style={{ color: "#BBE1FA80", fontSize: 12, lineHeight: 17 }}>
+                <Text style={{ color: "#BBE1FA60", fontSize: 12, lineHeight: 18 }}>
                   {tip.tip}
                 </Text>
               </View>

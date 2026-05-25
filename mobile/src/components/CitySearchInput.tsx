@@ -79,12 +79,12 @@ export default function CitySearchInput({
       <Text
         style={{
           color: '#BBE1FA',
-          opacity: 0.6,
+          opacity: 0.5,
           fontSize: 11,
           fontWeight: '700',
           textTransform: 'uppercase',
           letterSpacing: 1,
-          marginBottom: 6,
+          marginBottom: 8,
         }}
       >
         {label}
@@ -95,12 +95,12 @@ export default function CitySearchInput({
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          backgroundColor: '#1B262C',
-          borderRadius: 12,
+          backgroundColor: '#152238',
+          borderRadius: 14,
           borderWidth: 1,
-          borderColor: showDropdown ? '#3282B8' : '#3282B840',
-          paddingHorizontal: 12,
-          paddingVertical: 10,
+          borderColor: showDropdown ? '#3282B8' : '#3282B830',
+          paddingHorizontal: 14,
+          paddingVertical: 12,
         }}
       >
         <Ionicons name={icon} size={18} color="#3282B8" style={{ marginRight: 8 }} />
@@ -127,14 +127,18 @@ export default function CitySearchInput({
         <View
           style={{
             backgroundColor: '#0F3460',
-            borderRadius: 12,
+            borderRadius: 14,
             borderWidth: 1,
-            borderColor: '#3282B840',
-            marginTop: 4,
+            borderColor: '#3282B830',
+            marginTop: 6,
             overflow: 'hidden',
             maxHeight: 220,
             zIndex: 999,
-            elevation: 10,
+            elevation: 12,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 10,
           }}
         >
           <ScrollView keyboardShouldPersistTaps="handled" nestedScrollEnabled>
