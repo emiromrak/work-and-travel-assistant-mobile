@@ -142,7 +142,27 @@ def foto_url_getir(sehir):
 
 def onerileri_getir(metin):
     if len(metin) < 3: return []
-    try: return [y.address for y in Nominatim(user_agent="travel_assistant_v1").geocode(metin, exactly_one=False, limit=5, country_codes="us") or []]
+    try:
+        sonuclar = Nominatim(user_agent="travel_assistant_v1").geocode(
+            metin, exactly_one=False, limit=5, country_codes="us", featuretype="city", addressdetails=True
+        ) or []
+        
+        temiz_oneriler = []
+        for y in sonuclar:
+            adres = y.raw.get('address', {})
+            sehir = adres.get('city') or adres.get('town') or adres.get('village') or adres.get('county') or adres.get('hamlet')
+            eyalet = adres.get('state')
+            
+            if sehir and eyalet:
+                isim = f"{sehir}, {eyalet}"
+                if isim not in temiz_oneriler:
+                    temiz_oneriler.append(isim)
+            else:
+                isim = f"{y.address.split(',')[0].strip()}, {eyalet or 'USA'}"
+                if isim not in temiz_oneriler:
+                    temiz_oneriler.append(isim)
+        
+        return temiz_oneriler
     except: return []
 
 def mesafe_ve_koordinat_bul(hedef, benim_sehir_adi=None):

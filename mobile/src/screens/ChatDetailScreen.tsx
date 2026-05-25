@@ -124,16 +124,21 @@ export default function ChatDetailScreen() {
         <View
           style={{
             maxWidth: '75%',
-            backgroundColor: isMyMessage ? '#3282B8' : '#0F4C75',
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
-            borderBottomLeftRadius: isMyMessage ? 16 : 4,
-            borderBottomRightRadius: isMyMessage ? 4 : 16,
-            paddingHorizontal: 14,
-            paddingVertical: 10,
+            backgroundColor: isMyMessage ? '#3282B8' : '#152238',
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            borderBottomLeftRadius: isMyMessage ? 20 : 4,
+            borderBottomRightRadius: isMyMessage ? 4 : 20,
+            paddingHorizontal: 16,
+            paddingVertical: 12,
             borderWidth: 1,
-            borderColor: isMyMessage ? '#3282B830' : '#3282B810',
+            borderColor: isMyMessage ? '#3282B840' : '#3282B815',
             overflow: 'hidden',
+            shadowColor: isMyMessage ? '#3282B8' : '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: isMyMessage ? 0.4 : 0.15,
+            shadowRadius: isMyMessage ? 6 : 4,
+            elevation: isMyMessage ? 4 : 2,
           }}
         >
           {/* 📸 Mesaj Görseli */}
@@ -170,38 +175,54 @@ export default function ChatDetailScreen() {
         {/* Header */}
         <View
           style={{
-            paddingHorizontal: 16,
-            paddingVertical: 14,
+            paddingHorizontal: 20,
+            paddingVertical: 16,
             flexDirection: 'row',
             alignItems: 'center',
             borderBottomWidth: 1,
             borderBottomColor: '#3282B815',
-            backgroundColor: '#0B3A5C',
+            backgroundColor: '#0F3460',
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.2,
-            shadowRadius: 6,
-            elevation: 4,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 10,
+            elevation: 6,
+            zIndex: 10,
           }}
         >
           <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 14 }}>
             <Ionicons name="arrow-back" size={24} color="#BBE1FA" />
           </TouchableOpacity>
           
-          {receiver.profile_pic ? (
-            <Image
-              source={{ uri: receiver.profile_pic }}
-              style={{ width: 42, height: 42, borderRadius: 21, borderWidth: 2, borderColor: '#3282B8' }}
+          <View style={{ position: 'relative' }}>
+            {receiver.profile_pic ? (
+              <Image
+                source={{ uri: receiver.profile_pic }}
+                style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: '#3282B8' }}
+              />
+            ) : (
+              <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#152238', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#3282B8' }}>
+                <Ionicons name="person" size={20} color="#BBE1FA" />
+              </View>
+            )}
+            <View
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                width: 12,
+                height: 12,
+                borderRadius: 6,
+                backgroundColor: '#4ade80',
+                borderWidth: 2,
+                borderColor: '#0F3460',
+              }}
             />
-          ) : (
-            <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: '#0F3460', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#3282B8' }}>
-              <Ionicons name="person" size={18} color="#BBE1FA" />
-            </View>
-          )}
+          </View>
 
-          <View className="ml-3 flex-1">
-            <Text style={{ color: '#BBE1FA', fontWeight: '800', fontSize: 15 }}>{receiver.username}</Text>
-            <Text style={{ color: '#BBE1FA', opacity: 0.4, fontSize: 11, marginTop: 1 }}>J1 Student</Text>
+          <View className="ml-4 flex-1">
+            <Text style={{ color: '#BBE1FA', fontWeight: '900', fontSize: 16, letterSpacing: 0.3 }}>{receiver.username}</Text>
+            <Text style={{ color: '#BBE1FA', opacity: 0.5, fontSize: 11, marginTop: 2, fontWeight: '600' }}>J1 Student</Text>
           </View>
         </View>
 
@@ -271,27 +292,37 @@ export default function ChatDetailScreen() {
         {/* Mesaj Gönderme Barı */}
         <View
           style={{
-            padding: 14,
-            backgroundColor: '#0B3A5C',
-            borderTopWidth: 1,
-            borderTopColor: '#3282B815',
+            marginHorizontal: 16,
+            marginBottom: Platform.OS === 'ios' ? 8 : 16,
+            marginTop: 8,
+            padding: 8,
+            backgroundColor: '#0F3460',
+            borderRadius: 36,
+            borderWidth: 1,
+            borderColor: '#3282B820',
             flexDirection: 'row',
             alignItems: 'center',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+            elevation: 5,
           }}
         >
           {/* 📷 Galeri Butonu */}
           <TouchableOpacity
             onPress={handlePickImage}
             style={{
-              width: 42,
-              height: 42,
-              borderRadius: 21,
-              backgroundColor: '#0F3460',
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: '#152238',
               alignItems: 'center',
               justifyContent: 'center',
               marginRight: 10,
+              marginLeft: 4,
               borderWidth: 1,
-              borderColor: '#3282B830',
+              borderColor: '#3282B820',
             }}
           >
             <Ionicons name="image-outline" size={20} color="#BBE1FA" />
@@ -300,15 +331,13 @@ export default function ChatDetailScreen() {
           <View
             style={{
               flex: 1,
-              backgroundColor: '#152238',
-              borderRadius: 22,
-              paddingHorizontal: 16,
-              paddingVertical: 10,
-              borderWidth: 1,
-              borderColor: '#3282B820',
+              backgroundColor: 'transparent',
+              paddingHorizontal: 8,
+              paddingVertical: 8,
               flexDirection: 'row',
               alignItems: 'center',
               marginRight: 10,
+              maxHeight: 100,
             }}
           >
             <TextInput
@@ -329,7 +358,7 @@ export default function ChatDetailScreen() {
               borderRadius: 22,
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: canSend ? '#3282B8' : '#3282B850',
+              backgroundColor: canSend ? '#3282B8' : '#3282B830',
               shadowColor: canSend ? '#3282B8' : 'transparent',
               shadowOffset: { width: 0, height: 3 },
               shadowOpacity: 0.4,
