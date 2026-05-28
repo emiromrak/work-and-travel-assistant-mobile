@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
+from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from .database import Base
@@ -21,6 +22,10 @@ class User(Base):
     
     # Kullanıcının attığı gönderilerle (Post) arasındaki bağ
     posts = relationship("Post", back_populates="author")
+
+    # 🤝 Arkadaşlık ilişkileri
+    sent_requests = relationship("Friendship", foreign_keys="Friendship.requester_id", back_populates="requester")
+    received_requests = relationship("Friendship", foreign_keys="Friendship.receiver_id", back_populates="receiver")
 
 # 🌍 FLOW (AKIŞ) TABLOSU (Parti, İlan ve Muhabbetler)
 class Post(Base):
@@ -57,3 +62,20 @@ class Message(Base):
     content = Column(String)                              # Mesajın içeriği
     timestamp = Column(DateTime, default=datetime.utcnow) # Atılma zamanı
     image_url = Column(String, nullable=True)             # 📸 Gönderilen görsel URL'i
+
+
+
+
+# 🤝 ARKADAŞLIK TABLOSU
+class Friendship(Base):
+    __tablename__ = "friendships"
+
+    id = Column(Integer, primary_key=True, index=True)
+    requester_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # İsteği atan
+    receiver_id  = Column(Integer, ForeignKey("users.id"), nullable=False)  # İsteği alan
+    status       = Column(String, default="pending")                        # pending | accepted | rejected
+    created_at   = Column(DateTime, server_default=func.now())
+
+    # İlişkiler
+    requester = relationship("User", foreign_keys=[requester_id], back_populates="sent_requests")
+    receiver  = relationship("User", foreign_keys=[receiver_id],  back_populates="received_requests")
