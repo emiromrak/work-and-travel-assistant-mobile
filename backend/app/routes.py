@@ -11,7 +11,7 @@ import io
 from cryptography.fernet import Fernet, InvalidToken
 
 from app.database import get_db
-from app.models import User, Post, Message
+from app.models import User, Post, Message, Friendship
 from app.schemas import GuideRequest, UserCreate, UserLogin, PostCreate, MessageCreate, UserProfileUpdate
 
 # Supabase Storage Ayarları
@@ -364,6 +364,138 @@ async def get_conversation(user1_id: int, user2_id: int, db: Session = Depends(g
 
 
 # ==========================================
+# 🤝 SOSYAL AĞ API: ARKADAŞLIK SİSTEMİ
+# ==========================================
+
+@router.post("/users/{user_id}/friends/request")
+async def send_friend_request(user_id: int, receiver_id: int, db: Session = Depends(get_db)):
+    """
+    📨 Arkadaşlık isteği gönder.
+    - user_id: isteği atan kullanıcı
+    - receiver_id: isteği alan kullanıcı (query param)
+    """
+    if user_id == receiver_id:
+        raise HTTPException(status_code=400, detail="Kendinize arkadaşlık isteği atamassınız!")
+
+    if not db.query(User).filter(User.id == receiver_id).first():
+        raise HTTPException(status_code=404, detail="Hedef kullanıcı bulunamadı!")
+
+    # Daha önce istek atılmış veya zaten arkadaş mı?
+    existing = db.query(Friendship).filter(
+        (
+            (Friendship.requester_id == user_id) & (Friendship.receiver_id == receiver_id)
+        ) | (
+            (Friendship.requester_id == receiver_id) & (Friendship.receiver_id == user_id)
+        )
+    ).first()
+
+    if existing:
+        if existing.status == "accepted":
+            raise HTTPException(status_code=400, detail="Zaten arkadaşsınız!")
+        elif existing.status == "pending":
+            raise HTTPException(status_code=400, detail="Zaten bekleyen bir arkadaşlık isteği mevcut!")
+        elif existing.status == "rejected":
+            # Reddedilmiş eskiyi yenile
+            existing.status = "pending"
+            existing.requester_id = user_id
+            existing.receiver_id = receiver_id
+            db.commit()
+            return {"status": "success", "message": "Arkadaşlık isteği yeniden gönderildi!"}
+
+    friendship = Friendship(requester_id=user_id, receiver_id=receiver_id, status="pending")
+    db.add(friendship)
+    db.commit()
+    db.refresh(friendship)
+    return {"status": "success", "message": "Arkadaşlık isteği gönderildi!", "friendship_id": friendship.id}
+
+
+@router.get("/users/{user_id}/friends/requests")
+async def get_friend_requests(user_id: int, db: Session = Depends(get_db)):
+    """
+    📥 Bekleyen (pending) arkadaşlık isteklerini getir.
+    Sadece bu kullanıcıyı hedef alan (receiver) istekler döner.
+    """
+    requests = db.query(Friendship).filter(
+        Friendship.receiver_id == user_id,
+        Friendship.status == "pending"
+    ).all()
+
+    data = []
+    for req in requests:
+        r = req.requester
+        data.append({
+            "friendship_id": req.id,
+            "created_at": req.created_at,
+            "requester": {
+                "id": r.id,
+                "username": r.username,
+                "profile_pic": r.profile_pic,
+                "state_city": r.state_city,
+                "job_role": r.job_role,
+            }
+        })
+
+    return {"status": "success", "data": data}
+
+
+@router.put("/users/{user_id}/friends/{friendship_id}")
+async def respond_friend_request(user_id: int, friendship_id: int, action: str, db: Session = Depends(get_db)):
+    """
+    ✅ Arkadaşlık isteğine yanıt ver.
+    - action: "accepted" veya "rejected"
+    Sadece isteğin alıcısı (receiver) bu işlemi yapabilir.
+    """
+    if action not in ("accepted", "rejected"):
+        raise HTTPException(status_code=400, detail="Geçersiz işlem! 'accepted' veya 'rejected' gönder.")
+
+    friendship = db.query(Friendship).filter(Friendship.id == friendship_id).first()
+    if not friendship:
+        raise HTTPException(status_code=404, detail="Arkadaşlık isteği bulunamadı!")
+    if friendship.receiver_id != user_id:
+        raise HTTPException(status_code=403, detail="Bu isteği yanıtlama yetkiniz yok!")
+    if friendship.status != "pending":
+        raise HTTPException(status_code=400, detail="Bu istek zaten yanıtlanmış!")
+
+    friendship.status = action
+    db.commit()
+
+    msg = "🎉 Arkadaşlık kabul edildi!" if action == "accepted" else "🚫 İstek reddedildi."
+    return {"status": "success", "message": msg, "new_status": action}
+
+
+@router.get("/users/{user_id}/friends")
+async def get_friends_list(user_id: int, db: Session = Depends(get_db)):
+    """
+    👥 Kabul edilmiş (accepted) arkadaş listesini getir.
+    Kullanıcının hem requester hem receiver olduğu tüm accepted kayıtlar döner.
+    """
+    friendships = db.query(Friendship).filter(
+        (
+            (Friendship.requester_id == user_id) | (Friendship.receiver_id == user_id)
+        ),
+        Friendship.status == "accepted"
+    ).all()
+
+    friends = []
+    for f in friendships:
+        # Karşı tarafı bul
+        friend = f.receiver if f.requester_id == user_id else f.requester
+        friends.append({
+            "friendship_id": f.id,
+            "friend": {
+                "id": friend.id,
+                "username": friend.username,
+                "profile_pic": friend.profile_pic,
+                "state_city": friend.state_city,
+                "job_role": friend.job_role,
+                "start_city": friend.start_city,
+            }
+        })
+
+    return {"status": "success", "count": len(friends), "data": friends}
+
+
+# ==========================================
 # 🗑️ HESAP SİLME (Apple & Google Zorunluluğu)
 # ==========================================
 @router.delete("/users/{user_id}")
@@ -379,6 +511,11 @@ async def delete_account(user_id: int, db: Session = Depends(get_db)):
     # 1️⃣ Kullanıcının gönderdiği / aldığı tüm mesajları sil
     db.query(Message).filter(
         (Message.sender_id == user_id) | (Message.receiver_id == user_id)
+    ).delete(synchronize_session=False)
+
+    # 2️⃣ Kullanıcının arkadaşlık kayıtlarını sil
+    db.query(Friendship).filter(
+        (Friendship.requester_id == user_id) | (Friendship.receiver_id == user_id)
     ).delete(synchronize_session=False)
 
     # 2️⃣ Kullanıcının gönderilerini sil
