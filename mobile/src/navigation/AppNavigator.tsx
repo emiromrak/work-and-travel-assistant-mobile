@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import BottomTabNavigator from './BottomTabNavigator';
 import ProfileScreen from '../screens/ProfileScreen';
 import ChatDetailScreen from '../screens/ChatDetailScreen';
+import UserPublicProfileScreen from '../screens/UserPublicProfileScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -26,6 +27,14 @@ export default function AppNavigator() {
         options={{ 
           animation: 'slide_from_right' 
         }} 
+      />
+      {/* Kullanıcı Public Profil Ekranı */}
+      <Stack.Screen
+        name="UserPublicProfile"
+        component={UserPublicProfileScreen}
+        options={{
+          animation: 'slide_from_right',
+        }}
       />
     </Stack.Navigator>
   );

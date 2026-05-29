@@ -19,6 +19,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { fetchPosts, createPostAPI } from '../services/api';
 import { useUser } from '../context/UserContext';
+import { useNavigation } from '@react-navigation/native';
 
 interface Post {
   id: number;
@@ -35,6 +36,7 @@ interface Post {
 
 export default function SocialScreen() {
   const { user } = useUser();
+  const navigation = useNavigation<any>();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -167,7 +169,15 @@ export default function SocialScreen() {
     }
   };
 
-  const renderPostItem = ({ item }: { item: Post }) => (
+  const renderPostItem = ({ item }: { item: Post }) => {
+    const isOwnPost = item.user_id === user?.id;
+    const targetUser = {
+      id: item.user_id,
+      username: item.username,
+      profile_pic: item.profile_pic,
+    };
+
+    return (
     <View
       style={{
         backgroundColor: '#0F4C75',
@@ -183,8 +193,16 @@ export default function SocialScreen() {
         elevation: 4,
       }}
     >
-      {/* Kullanıcı Bilgisi */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, paddingBottom: 10 }}>
+      {/* Kullanıcı Bilgisi — profile tıklanınca UserPublicProfile aç */}
+      <TouchableOpacity
+        onPress={() => {
+          if (!isOwnPost) {
+            navigation.navigate('UserPublicProfile', { targetUser });
+          }
+        }}
+        activeOpacity={isOwnPost ? 1 : 0.7}
+        style={{ flexDirection: 'row', alignItems: 'center', padding: 16, paddingBottom: 10 }}
+      >
         {item.profile_pic ? (
           <Image
             source={{ uri: item.profile_pic }}
@@ -207,7 +225,14 @@ export default function SocialScreen() {
           </View>
         )}
         <View style={{ marginLeft: 12, flex: 1 }}>
-          <Text style={{ color: '#BBE1FA', fontWeight: '800', fontSize: 14 }}>{item.username}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{ color: '#BBE1FA', fontWeight: '800', fontSize: 14 }}>{item.username}</Text>
+            {isOwnPost && (
+              <View style={{ backgroundColor: '#3282B820', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
+                <Text style={{ color: '#3282B8', fontSize: 10, fontWeight: '700' }}>Sen</Text>
+              </View>
+            )}
+          </View>
           {/* 📍 Konum Badge */}
           {item.location_name ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
@@ -218,7 +243,10 @@ export default function SocialScreen() {
             <Text style={{ color: '#BBE1FA', opacity: 0.35, fontSize: 11, marginTop: 2 }}>J1 Student</Text>
           )}
         </View>
-      </View>
+        {!isOwnPost && (
+          <Ionicons name="chevron-forward" size={14} color="#BBE1FA20" />
+        )}
+      </TouchableOpacity>
 
       {/* Post Başlık & İçerik */}
       <View style={{ paddingHorizontal: 16, paddingBottom: item.image_url ? 0 : 16 }}>
@@ -236,6 +264,7 @@ export default function SocialScreen() {
       ) : null}
     </View>
   );
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-bg-dark">

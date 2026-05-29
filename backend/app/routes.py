@@ -162,6 +162,35 @@ async def list_users(db: Session = Depends(get_db)):
         ]
     }
 
+@router.get("/users/search")
+async def search_users(q: str, exclude_id: int = None, db: Session = Depends(get_db)):
+    """
+    🔍 Kullanıcı adına göre kullanıcı arama.
+    - q: Arama terimi (username)
+    - exclude_id: Bu ID'yi sonuçlardan çıkar (kendini aramaktan kaçınmak için)
+    """
+    if len(q) < 2:
+        return {"status": "success", "data": []}
+
+    query = db.query(User).filter(User.username.ilike(f"%{q}%"))
+    if exclude_id:
+        query = query.filter(User.id != exclude_id)
+
+    users = query.limit(10).all()
+    return {
+        "status": "success",
+        "data": [
+            {
+                "id": u.id,
+                "username": u.username,
+                "state_city": u.state_city,
+                "job_role": u.job_role,
+                "profile_pic": u.profile_pic,
+            } for u in users
+        ]
+    }
+
+
 @router.put("/users/{user_id}")
 async def update_user_profile(user_id: int, profile: UserProfileUpdate, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
@@ -407,6 +436,8 @@ async def send_friend_request(user_id: int, receiver_id: int, db: Session = Depe
     db.commit()
     db.refresh(friendship)
     return {"status": "success", "message": "Arkadaşlık isteği gönderildi!", "friendship_id": friendship.id}
+
+
 
 
 @router.get("/users/{user_id}/friends/requests")

@@ -312,6 +312,84 @@ export const sendMessageAPI = async (messageData: {
   }
 };
 
+// 🔍 Kullanıcı Adı ile Arama API'si
+export const searchUsersAPI = async (query: string, excludeId?: number): Promise<any[]> => {
+  try {
+    if (query.length < 2) return [];
+    let url = `${API_BASE_URL}/users/search?q=${encodeURIComponent(query)}`;
+    if (excludeId) url += `&exclude_id=${excludeId}`;
+    const response = await fetch(url);
+    if (!response.ok) return [];
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error('Kullanıcı araması yapılamadı:', error);
+    return [];
+  }
+};
+
+// 🤝 Arkadaş Listesini Getirme API'si
+export const getFriendsListAPI = async (userId: number) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/friends`);
+    if (!response.ok) throw new Error('Arkadaş listesi alınamadı');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Arkadaş listesi alınamadı:', error);
+    throw error;
+  }
+};
+
+// 📨 Arkadaşlık İsteği Gönderme API'si
+export const sendFriendRequestAPI = async (userId: number, receiverId: number) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/users/${userId}/friends/request?receiver_id=${receiverId}`,
+      { method: 'POST' }
+    );
+    const data = await response.json();
+    if (!response.ok) throw new Error(data?.detail || 'İstek gönderilemedi');
+    return data;
+  } catch (error) {
+    console.error('Arkadaşlık isteği gönderilemedi:', error);
+    throw error;
+  }
+};
+
+// 📥 Bekleyen Arkadaşlık İsteklerini Getirme API'si
+export const getFriendRequestsAPI = async (userId: number) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/friends/requests`);
+    if (!response.ok) throw new Error('İstekler alınamadı');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Arkadaşlık istekleri alınamadı:', error);
+    throw error;
+  }
+};
+
+// ✅ Arkadaşlık İsteğine Yanıt Verme API'si
+export const respondFriendRequestAPI = async (
+  userId: number,
+  friendshipId: number,
+  action: 'accepted' | 'rejected'
+) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/users/${userId}/friends/${friendshipId}?action=${action}`,
+      { method: 'PUT' }
+    );
+    const data = await response.json();
+    if (!response.ok) throw new Error(data?.detail || 'Yanıt gönderilemedi');
+    return data;
+  } catch (error) {
+    console.error('Arkadaşlık isteğine yanıt verilemedi:', error);
+    throw error;
+  }
+};
+
 // 🗑️ Hesap Silme API'si (Apple & Google zorunluluğu)
 export const deleteAccountAPI = async (userId: number) => {
   try {
