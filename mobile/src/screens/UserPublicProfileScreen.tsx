@@ -16,6 +16,8 @@ import {
   getFriendsListAPI,
   sendFriendRequestAPI,
   getFriendRequestsAPI,
+  cancelFriendRequestAPI,
+  fetchUserProfileAPI,
 } from '../services/api';
 
 interface PublicUser {
@@ -24,6 +26,7 @@ interface PublicUser {
   state_city?: string;
   job_role?: string;
   profile_pic?: string | null;
+  start_city?: string;
 }
 
 type FriendStatus = 'none' | 'pending_sent' | 'pending_received' | 'friends' | 'self';
@@ -33,86 +36,119 @@ export default function UserPublicProfileScreen() {
   const route = useRoute<any>();
   const { user } = useUser();
 
-  const targetUser: PublicUser = route.params?.targetUser;
+  const initialUser: PublicUser = route.params?.targetUser;
 
+  const [targetUser, setTargetUser] = useState<PublicUser>(initialUser);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [friendStatus, setFriendStatus] = useState<FriendStatus>('none');
-  const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
 
+  // Tam profili çek (start_city, state_city dahil)
   useEffect(() => {
-    if (!user || !targetUser) return;
-    if (user.id === targetUser.id) {
+    if (!initialUser?.id) return;
+    fetchUserProfileAPI(initialUser.id)
+      .then((res) => {
+        if (res?.data) {
+          setTargetUser((prev) => ({ ...prev, ...res.data }));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setProfileLoading(false));
+  }, [initialUser?.id]);
+
+  // Arkadaşlık durumunu kontrol et
+  useEffect(() => {
+    if (!user || !initialUser) return;
+    if (user.id === initialUser.id) {
       setFriendStatus('self');
-      setLoading(false);
+      setStatusLoading(false);
       return;
     }
     checkFriendStatus();
-  }, [user, targetUser]);
+  }, [user, initialUser]);
 
   const checkFriendStatus = async () => {
-    if (!user || !targetUser) return;
-    setLoading(true);
+    if (!user || !initialUser) return;
+    setStatusLoading(true);
     try {
-      // Arkadaş listesini kontrol et
-      const friendsRes = await getFriendsListAPI(user.id);
+      const [friendsRes, myRequestsRes] = await Promise.all([
+        getFriendsListAPI(user.id),
+        getFriendRequestsAPI(user.id),
+      ]);
+
       const friends: any[] = friendsRes?.data || [];
-      const isFriend = friends.some((f: any) => f.friend?.id === targetUser.id);
-      if (isFriend) {
+      if (friends.some((f: any) => f.friend?.id === initialUser.id)) {
         setFriendStatus('friends');
-        setLoading(false);
         return;
       }
 
-      // Bekleyen gelen istekleri kontrol et
-      const requestsRes = await getFriendRequestsAPI(user.id);
-      const pendingRequests: any[] = requestsRes?.data || [];
-      const hasIncoming = pendingRequests.some(
-        (r: any) => r.requester?.id === targetUser.id
-      );
-      if (hasIncoming) {
+      // Bana gelen bekleyen istek
+      const incoming: any[] = myRequestsRes?.data || [];
+      if (incoming.some((r: any) => r.requester?.id === initialUser.id)) {
         setFriendStatus('pending_received');
-        setLoading(false);
         return;
       }
 
-      // Hedef kullanıcının aldığı bekleyen isteklerini kontrol et (benim gönderdiğim var mı?)
-      const targetRequestsRes = await getFriendRequestsAPI(targetUser.id);
-      const targetPending: any[] = targetRequestsRes?.data || [];
-      const hasSent = targetPending.some(
-        (r: any) => r.requester?.id === user.id
-      );
-      if (hasSent) {
+      // Benim gönderdiğim bekleyen istek (hedef kullanıcının gelen isteklerini kontrol et)
+      const targetRequestsRes = await getFriendRequestsAPI(initialUser.id);
+      const targetIncoming: any[] = targetRequestsRes?.data || [];
+      if (targetIncoming.some((r: any) => r.requester?.id === user.id)) {
         setFriendStatus('pending_sent');
-        setLoading(false);
         return;
       }
 
       setFriendStatus('none');
-    } catch (e) {
+    } catch {
       setFriendStatus('none');
     } finally {
-      setLoading(false);
+      setStatusLoading(false);
     }
   };
 
   const handleSendRequest = async () => {
     if (!user || !targetUser) return;
-    setSending(true);
+    setActionLoading(true);
     try {
       await sendFriendRequestAPI(user.id, targetUser.id);
       setFriendStatus('pending_sent');
-      Alert.alert('İstek Gönderildi 🎉', `${targetUser.username} adlı kullanıcıya arkadaşlık isteği gönderildi!`);
     } catch (e: any) {
       Alert.alert('Hata', e.message || 'İstek gönderilemedi.');
     } finally {
-      setSending(false);
+      setActionLoading(false);
     }
   };
 
+  const handleCancelRequest = async () => {
+    if (!user || !targetUser) return;
+    Alert.alert(
+      'İsteği Geri Çek',
+      `${targetUser.username} adlı kullanıcıya gönderilen istek iptal edilsin mi?`,
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        {
+          text: 'Geri Çek',
+          style: 'destructive',
+          onPress: async () => {
+            setActionLoading(true);
+            try {
+              await cancelFriendRequestAPI(user.id, targetUser.id);
+              setFriendStatus('none');
+            } catch (e: any) {
+              Alert.alert('Hata', e.message || 'İstek geri çekilemedi.');
+            } finally {
+              setActionLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderFriendButton = () => {
-    if (loading) {
+    if (statusLoading) {
       return (
-        <View style={buttonBase}>
+        <View style={[btnBase, { backgroundColor: '#0F3460', borderColor: '#3282B820' }]}>
           <ActivityIndicator color="#BBE1FA" size="small" />
         </View>
       );
@@ -124,8 +160,8 @@ export default function UserPublicProfileScreen() {
 
       case 'friends':
         return (
-          <View style={[buttonBase, { backgroundColor: '#14532d', borderColor: '#4ade80' }]}>
-            <Ionicons name="checkmark-circle" size={18} color="#4ade80" />
+          <View style={[btnBase, { backgroundColor: '#14532d', borderColor: '#4ade8050' }]}>
+            <Ionicons name="checkmark-circle" size={19} color="#4ade80" />
             <Text style={{ color: '#4ade80', fontWeight: '700', fontSize: 15, marginLeft: 8 }}>
               Arkadaşsınız 🤝
             </Text>
@@ -134,18 +170,29 @@ export default function UserPublicProfileScreen() {
 
       case 'pending_sent':
         return (
-          <View style={[buttonBase, { backgroundColor: '#1e293b', borderColor: '#64748b' }]}>
-            <Ionicons name="time-outline" size={18} color="#94a3b8" />
-            <Text style={{ color: '#94a3b8', fontWeight: '700', fontSize: 15, marginLeft: 8 }}>
-              İstek Gönderildi
-            </Text>
-          </View>
+          <TouchableOpacity
+            onPress={handleCancelRequest}
+            disabled={actionLoading}
+            style={[btnBase, { backgroundColor: '#1e293b', borderColor: '#64748b50' }]}
+          >
+            {actionLoading ? (
+              <ActivityIndicator color="#94a3b8" size="small" />
+            ) : (
+              <>
+                <Ionicons name="time-outline" size={19} color="#94a3b8" />
+                <Text style={{ color: '#94a3b8', fontWeight: '700', fontSize: 15, marginLeft: 8 }}>
+                  İstek Gönderildi
+                </Text>
+                <Text style={{ color: '#64748b', fontSize: 12, marginLeft: 6 }}>· Geri çek</Text>
+              </>
+            )}
+          </TouchableOpacity>
         );
 
       case 'pending_received':
         return (
-          <View style={[buttonBase, { backgroundColor: '#0c4a6e', borderColor: '#3282B8' }]}>
-            <Ionicons name="person-add-outline" size={18} color="#BBE1FA" />
+          <View style={[btnBase, { backgroundColor: '#0c4a6e', borderColor: '#3282B840' }]}>
+            <Ionicons name="person-add-outline" size={19} color="#BBE1FA" />
             <Text style={{ color: '#BBE1FA', fontWeight: '700', fontSize: 15, marginLeft: 8 }}>
               Sana İstek Gönderdi
             </Text>
@@ -156,9 +203,9 @@ export default function UserPublicProfileScreen() {
         return (
           <TouchableOpacity
             onPress={handleSendRequest}
-            disabled={sending}
+            disabled={actionLoading}
             style={[
-              buttonBase,
+              btnBase,
               {
                 backgroundColor: '#3282B8',
                 borderColor: '#3282B8',
@@ -170,11 +217,11 @@ export default function UserPublicProfileScreen() {
               },
             ]}
           >
-            {sending ? (
+            {actionLoading ? (
               <ActivityIndicator color="#BBE1FA" size="small" />
             ) : (
               <>
-                <Ionicons name="person-add-outline" size={18} color="#BBE1FA" />
+                <Ionicons name="person-add-outline" size={19} color="#BBE1FA" />
                 <Text style={{ color: '#BBE1FA', fontWeight: '700', fontSize: 15, marginLeft: 8 }}>
                   Arkadaşlık İsteği Gönder
                 </Text>
@@ -185,9 +232,9 @@ export default function UserPublicProfileScreen() {
     }
   };
 
-  if (!targetUser) {
-    return null;
-  }
+  if (!targetUser) return null;
+
+  const hasJourney = targetUser.start_city && targetUser.state_city;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#1B262C' }}>
@@ -244,40 +291,98 @@ export default function UserPublicProfileScreen() {
           <Text style={{ color: '#BBE1FA', fontSize: 22, fontWeight: '900', marginTop: 14 }}>
             {targetUser.username}
           </Text>
-          <Text style={{ color: '#BBE1FA', opacity: 0.45, fontSize: 13, marginTop: 4 }}>
+          <Text style={{ color: '#BBE1FA', opacity: 0.4, fontSize: 13, marginTop: 4 }}>
             J1 Student
           </Text>
         </View>
 
+        {/* Yolculuk: Nereden → Nereye */}
+        {profileLoading ? (
+          <View style={[card, { alignItems: 'center', paddingVertical: 24 }]}>
+            <ActivityIndicator color="#3282B8" />
+          </View>
+        ) : hasJourney ? (
+          <View style={[card, { marginBottom: 16 }]}>
+            <Text
+              style={{
+                color: '#BBE1FA',
+                opacity: 0.45,
+                fontSize: 11,
+                fontWeight: '700',
+                textTransform: 'uppercase',
+                letterSpacing: 1,
+                marginBottom: 14,
+              }}
+            >
+              ✈️ Yolculuk
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              {/* Kalkış */}
+              <View style={{ flex: 1, alignItems: 'center' }}>
+                <View style={iconCircle}>
+                  <Ionicons name="home-outline" size={18} color="#3282B8" />
+                </View>
+                <Text
+                  style={{
+                    color: '#BBE1FA',
+                    fontSize: 13,
+                    fontWeight: '700',
+                    marginTop: 8,
+                    textAlign: 'center',
+                  }}
+                  numberOfLines={2}
+                >
+                  {targetUser.start_city}
+                </Text>
+              </View>
+
+              {/* Ok */}
+              <View style={{ alignItems: 'center', paddingHorizontal: 8 }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 2,
+                  }}
+                >
+                  <View style={{ width: 24, height: 1, backgroundColor: '#3282B860' }} />
+                  <Ionicons name="airplane" size={18} color="#3282B8" />
+                  <View style={{ width: 24, height: 1, backgroundColor: '#3282B860' }} />
+                </View>
+              </View>
+
+              {/* Varış */}
+              <View style={{ flex: 1, alignItems: 'center' }}>
+                <View style={[iconCircle, { backgroundColor: '#3282B820' }]}>
+                  <Ionicons name="location-outline" size={18} color="#4ade80" />
+                </View>
+                <Text
+                  style={{
+                    color: '#BBE1FA',
+                    fontSize: 13,
+                    fontWeight: '700',
+                    marginTop: 8,
+                    textAlign: 'center',
+                  }}
+                  numberOfLines={2}
+                >
+                  {targetUser.state_city}
+                </Text>
+              </View>
+            </View>
+          </View>
+        ) : null}
+
         {/* Bilgi Kartı */}
-        <View
-          style={{
-            backgroundColor: '#0F3460',
-            borderRadius: 22,
-            padding: 20,
-            borderWidth: 1,
-            borderColor: '#3282B820',
-            gap: 16,
-            marginBottom: 24,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 3 },
-            shadowOpacity: 0.2,
-            shadowRadius: 8,
-            elevation: 4,
-          }}
-        >
+        <View style={[card, { gap: 16, marginBottom: 24 }]}>
           {targetUser.job_role ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <View style={iconCircle}>
                 <Ionicons name="briefcase-outline" size={18} color="#3282B8" />
               </View>
               <View>
-                <Text style={{ color: '#BBE1FA', opacity: 0.45, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                  Pozisyon
-                </Text>
-                <Text style={{ color: '#BBE1FA', fontSize: 15, fontWeight: '600', marginTop: 2 }}>
-                  {targetUser.job_role}
-                </Text>
+                <Text style={labelStyle}>Pozisyon</Text>
+                <Text style={valueStyle}>{targetUser.job_role}</Text>
               </View>
             </View>
           ) : null}
@@ -288,12 +393,8 @@ export default function UserPublicProfileScreen() {
                 <Ionicons name="location-outline" size={18} color="#3282B8" />
               </View>
               <View>
-                <Text style={{ color: '#BBE1FA', opacity: 0.45, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                  Şehir / Eyalet
-                </Text>
-                <Text style={{ color: '#BBE1FA', fontSize: 15, fontWeight: '600', marginTop: 2 }}>
-                  {targetUser.state_city}
-                </Text>
+                <Text style={labelStyle}>Çalışma Şehri</Text>
+                <Text style={valueStyle}>{targetUser.state_city}</Text>
               </View>
             </View>
           ) : null}
@@ -306,14 +407,26 @@ export default function UserPublicProfileScreen() {
   );
 }
 
-const buttonBase: any = {
+const btnBase: any = {
   flexDirection: 'row',
   alignItems: 'center',
   justifyContent: 'center',
   borderRadius: 18,
   paddingVertical: 16,
   borderWidth: 1,
-  borderColor: 'transparent',
+};
+
+const card: any = {
+  backgroundColor: '#0F3460',
+  borderRadius: 22,
+  padding: 20,
+  borderWidth: 1,
+  borderColor: '#3282B820',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 3 },
+  shadowOpacity: 0.2,
+  shadowRadius: 8,
+  elevation: 4,
 };
 
 const iconCircle: any = {
@@ -323,4 +436,20 @@ const iconCircle: any = {
   backgroundColor: '#0F4C75',
   alignItems: 'center',
   justifyContent: 'center',
+};
+
+const labelStyle: any = {
+  color: '#BBE1FA',
+  opacity: 0.45,
+  fontSize: 11,
+  fontWeight: '700',
+  textTransform: 'uppercase',
+  letterSpacing: 0.8,
+};
+
+const valueStyle: any = {
+  color: '#BBE1FA',
+  fontSize: 15,
+  fontWeight: '600',
+  marginTop: 2,
 };

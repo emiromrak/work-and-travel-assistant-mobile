@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TIMEZONES, ISTANBUL_TIMEZONE } from "../data/timezones";
 import { useNavigation } from "@react-navigation/native";
 import { useUser } from "../context/UserContext";
@@ -81,6 +82,25 @@ export default function DashboardScreen() {
   const [updatedTime, setUpdatedTime] = useState<string>("Yükleniyor...");
   const [liveStatus, setLiveStatus] = useState<string>("CANLI (Mock)");
 
+  // Uçuş tarihini AsyncStorage'dan yükle
+  useEffect(() => {
+    const loadFlightDate = async () => {
+      try {
+        const savedDate = await AsyncStorage.getItem("flightDate");
+        if (savedDate) {
+          setFlightDateInput(savedDate);
+          const parsed = new Date(savedDate);
+          if (!isNaN(parsed.getTime())) {
+            setFlightDate(parsed);
+          }
+        }
+      } catch (e) {
+        console.error("Uçuş tarihi yüklenemedi:", e);
+      }
+    };
+    loadFlightDate();
+  }, []);
+
   useEffect(() => {
     const loadRate = async () => {
       try {
@@ -126,12 +146,17 @@ export default function DashboardScreen() {
     return () => clearInterval(interval);
   }, [flightDate]);
 
-  const handleDateChange = (text: string) => {
+  const handleDateChange = async (text: string) => {
     setFlightDateInput(text);
     const parsed = new Date(text);
     if (!isNaN(parsed.getTime())) {
       setFlightDate(parsed);
       setDateError("");
+      try {
+        await AsyncStorage.setItem("flightDate", text);
+      } catch (e) {
+        console.error("Uçuş tarihi kaydedilemedi:", e);
+      }
     } else {
       setDateError("Geçersiz tarih formatı (YYYY-MM-DD)");
     }

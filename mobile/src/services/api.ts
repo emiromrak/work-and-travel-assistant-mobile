@@ -413,3 +413,31 @@ export const deleteAccountAPI = async (userId: number) => {
   }
 };
 
+// 🚫 Gönderilen Arkadaşlık İsteğini Geri Çekme
+export const cancelFriendRequestAPI = async (userId: number, targetId: number) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/users/${userId}/friends/request?target_id=${targetId}`,
+      { method: 'DELETE' }
+    );
+    const data = await response.json();
+    if (!response.ok) throw new Error(data?.detail || 'İstek geri çekilemedi');
+    return data;
+  } catch (error) {
+    console.error('İstek geri çekilemedi:', error);
+    throw error;
+  }
+};
+
+// 👤 Kullanıcı Profili Getirme (public)
+export const fetchUserProfileAPI = async (userId: number) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}`);
+    if (!response.ok) throw new Error('Profil alınamadı');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Kullanıcı profili alınamadı:', error);
+    throw error;
+  }
+};

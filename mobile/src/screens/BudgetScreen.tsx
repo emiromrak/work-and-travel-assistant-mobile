@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetchExchangeRate } from "../services/api";
 
 interface Job {
@@ -41,6 +42,38 @@ export default function BudgetScreen() {
   const [grossMonthly, setGrossMonthly] = useState(0);
   const [netMonthly, setNetMonthly] = useState(0);
   const [threeMonthSavings, setThreeMonthSavings] = useState(0);
+
+  // Load from AsyncStorage
+  useEffect(() => {
+    const loadBudget = async () => {
+      try {
+        const savedJobs = await AsyncStorage.getItem("budget_jobs");
+        const savedTax = await AsyncStorage.getItem("budget_taxRate");
+        const savedExpense = await AsyncStorage.getItem("budget_monthlyExpense");
+        
+        if (savedJobs) setJobs(JSON.parse(savedJobs));
+        if (savedTax) setTaxRate(savedTax);
+        if (savedExpense) setMonthlyExpense(savedExpense);
+      } catch (e) {
+        console.error("Bütçe verileri yüklenemedi:", e);
+      }
+    };
+    loadBudget();
+  }, []);
+
+  // Save to AsyncStorage when values change
+  useEffect(() => {
+    const saveBudget = async () => {
+      try {
+        await AsyncStorage.setItem("budget_jobs", JSON.stringify(jobs));
+        await AsyncStorage.setItem("budget_taxRate", taxRate);
+        await AsyncStorage.setItem("budget_monthlyExpense", monthlyExpense);
+      } catch (e) {
+        console.error("Bütçe verileri kaydedilemedi:", e);
+      }
+    };
+    saveBudget();
+  }, [jobs, taxRate, monthlyExpense]);
 
   useEffect(() => {
     const loadRate = async () => {

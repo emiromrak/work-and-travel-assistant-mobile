@@ -351,26 +351,36 @@ export default function ChatListScreen() {
       {/* ── Arkadaş Arama Modali ─────────────────────────────────────────────── */}
       <Modal
         visible={searchModal}
-        animationType="slide"
+        animationType="fade"
         transparent
         onRequestClose={() => setSearchModal(false)}
       >
-        <View
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setSearchModal(false)}
           style={{
             flex: 1,
-            backgroundColor: '#000000AA',
-            justifyContent: 'flex-end',
+            backgroundColor: '#000000BB',
+            justifyContent: 'center',
+            paddingHorizontal: 20,
           }}
         >
+          <TouchableOpacity activeOpacity={1} onPress={() => {}}>
           <View
             style={{
               backgroundColor: '#1B262C',
-              borderTopLeftRadius: 28,
-              borderTopRightRadius: 28,
+              borderRadius: 28,
               paddingTop: 20,
               paddingHorizontal: 20,
-              paddingBottom: 40,
+              paddingBottom: 24,
               maxHeight: '80%',
+              borderWidth: 1,
+              borderColor: '#3282B820',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.5,
+              shadowRadius: 20,
+              elevation: 20,
             }}
           >
             {/* Modal Header */}
@@ -518,7 +528,8 @@ export default function ChatListScreen() {
               )}
             </ScrollView>
           </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
 
       {/* ── Bekleyen İstekler Modali ─────────────────────────────────────────── */}
