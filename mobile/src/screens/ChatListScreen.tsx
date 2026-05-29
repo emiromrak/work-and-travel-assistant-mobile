@@ -362,7 +362,7 @@ export default function ChatListScreen() {
             flex: 1,
             backgroundColor: '#000000BB',
             justifyContent: 'center',
-            paddingHorizontal: 20,
+            paddingHorizontal: 12,
           }}
         >
           <TouchableOpacity activeOpacity={1} onPress={() => {}}>
@@ -373,7 +373,7 @@ export default function ChatListScreen() {
               paddingTop: 20,
               paddingHorizontal: 20,
               paddingBottom: 24,
-              maxHeight: '80%',
+              height: '85%',
               borderWidth: 1,
               borderColor: '#3282B820',
               shadowColor: '#000',

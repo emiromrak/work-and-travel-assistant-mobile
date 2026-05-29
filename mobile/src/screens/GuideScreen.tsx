@@ -250,7 +250,7 @@ export default function GuideScreen() {
           </AccordionSection>
 
           {/* Restaurants */}
-          <AccordionSection title="🍽️ Öğrenci Dostu Restoranlar">
+          <AccordionSection title="🍽️ Öğrenci Dostu Restoranlar" defaultOpen>
             {guide.restaurants.map((r, i) => (
               <View
                 key={i}
@@ -286,7 +286,7 @@ export default function GuideScreen() {
           </AccordionSection>
 
           {/* Budget Tips */}
-          <AccordionSection title="💡 Bütçe Tavsiyeleri">
+          <AccordionSection title="💡 Bütçe Tavsiyeleri" defaultOpen>
             {guide.budgetTips.map((tip, i) => (
               <View
                 key={i}
