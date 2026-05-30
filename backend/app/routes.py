@@ -85,12 +85,16 @@ async def get_distance(target_city: str, my_city: str = None):
     return mesafe_ve_koordinat_bul(target_city, my_city)
 
 @router.get("/city-suggestions")
-async def get_city_suggestions(q: str):
-    """Kullanıcının yazdığı metne göre dünya genelinden şehir önerileri döndürür."""
+async def get_city_suggestions(q: str, type: str = "current"):
+    """Kullanıcının yazdığı metne göre şehir önerileri döndürür.
+    type='destination' → sadece ABD şehirleri
+    type='current'    → Türkiye dahil tüm dünya
+    """
     from app.delta_tools import onerileri_getir
     if len(q) < 2:
         return {"suggestions": []}
-    suggestions = onerileri_getir(q)
+    sadece_usa = (type == "destination")
+    suggestions = onerileri_getir(q, sadece_usa=sadece_usa)
     return {"suggestions": suggestions[:8]}
 
 

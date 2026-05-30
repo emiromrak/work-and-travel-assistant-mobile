@@ -168,10 +168,11 @@ export const fetchDistance = async (targetCity: string, myCity?: string) => {
 };
 
 // Şehir arama önerileri API'si
-export const fetchCitySuggestions = async (query: string): Promise<string[]> => {
+// type: 'current' → Türkiye + tüm dünya, 'destination' → sadece ABD
+export const fetchCitySuggestions = async (query: string, type: 'current' | 'destination' = 'current'): Promise<string[]> => {
   try {
     if (query.length < 2) return [];
-    const response = await fetch(`${API_BASE_URL}/city-suggestions?q=${encodeURIComponent(query)}`);
+    const response = await fetch(`${API_BASE_URL}/city-suggestions?q=${encodeURIComponent(query)}&type=${type}`);
     if (!response.ok) return [];
     const data = await response.json();
     return data.suggestions || [];

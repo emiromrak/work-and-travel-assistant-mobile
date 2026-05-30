@@ -16,6 +16,7 @@ interface CitySearchInputProps {
   value: string;
   onSelect: (city: string) => void;
   icon?: keyof typeof Ionicons.glyphMap;
+  cityType?: 'current' | 'destination'; // 'current' = Tüm dünya, 'destination' = Sadece ABD
 }
 
 export default function CitySearchInput({
@@ -24,6 +25,7 @@ export default function CitySearchInput({
   value,
   onSelect,
   icon = 'location-outline',
+  cityType = 'current',
 }: CitySearchInputProps) {
   const [inputText, setInputText] = useState(value);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -48,7 +50,7 @@ export default function CitySearchInput({
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const results = await fetchCitySuggestions(text);
+        const results = await fetchCitySuggestions(text, cityType);
         setSuggestions(results);
         setShowDropdown(results.length > 0);
       } catch {
