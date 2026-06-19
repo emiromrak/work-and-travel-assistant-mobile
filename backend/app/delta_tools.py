@@ -140,29 +140,54 @@ def foto_url_getir(sehir):
     except: pass
     return None
 
-def onerileri_getir(metin):
+def onerileri_getir(metin, sadece_usa=False):
     if len(metin) < 3: return []
     try:
-        sonuclar = Nominatim(user_agent="travel_assistant_v1").geocode(
-            metin, exactly_one=False, limit=5, country_codes="us", featuretype="city", addressdetails=True
-        ) or []
-        
+        if sadece_usa:
+            # Sadece ABD şehirleri
+            sonuclar = Nominatim(user_agent="travel_assistant_v1").geocode(
+                metin, exactly_one=False, limit=8, country_codes="us",
+                featuretype="city", addressdetails=True, language="en"
+            ) or []
+        else:
+            # Tüm dünya: Türkiye dahil
+            sonuclar = Nominatim(user_agent="travel_assistant_v1").geocode(
+                metin, exactly_one=False, limit=10,
+                featuretype="city", addressdetails=True, language="tr"
+            ) or []
+
         temiz_oneriler = []
         for y in sonuclar:
             adres = y.raw.get('address', {})
-            sehir = adres.get('city') or adres.get('town') or adres.get('village') or adres.get('county') or adres.get('hamlet')
-            eyalet = adres.get('state')
-            
-            if sehir and eyalet:
-                isim = f"{sehir}, {eyalet}"
-                if isim not in temiz_oneriler:
-                    temiz_oneriler.append(isim)
+            sehir = (
+                adres.get('city') or adres.get('town') or
+                adres.get('village') or adres.get('county') or
+                adres.get('hamlet') or adres.get('municipality')
+            )
+            eyalet = adres.get('state') or adres.get('province')
+            ulke = adres.get('country', '')
+            ulke_kodu = adres.get('country_code', '').upper()
+
+            if not sehir:
+                sehir = y.address.split(',')[0].strip()
+
+            if sadece_usa:
+                # ABD: "Orlando, Florida" formatı
+                isim = f"{sehir}, {eyalet or 'USA'}"
+            elif ulke_kodu == 'TR':
+                # Türkiye: "İstanbul, İstanbul" formatı
+                bolge = eyalet or ulke
+                isim = f"{sehir}, {bolge}"
+            elif ulke_kodu == 'US':
+                isim = f"{sehir}, {eyalet or 'USA'}"
             else:
-                isim = f"{y.address.split(',')[0].strip()}, {eyalet or 'USA'}"
-                if isim not in temiz_oneriler:
-                    temiz_oneriler.append(isim)
-        
-        return temiz_oneriler
+                bolge = eyalet or ulke
+                isim = f"{sehir}, {bolge}" if bolge else sehir
+
+            if isim and isim not in temiz_oneriler:
+                temiz_oneriler.append(isim)
+
+        return temiz_oneriler[:8]
     except: return []
 
 def mesafe_ve_koordinat_bul(hedef, benim_sehir_adi=None):

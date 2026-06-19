@@ -194,6 +194,7 @@ export default function MapScreen() {
             value={myCity}
             onSelect={setMyCity}
             icon="home-outline"
+            cityType="current"
           />
           <CitySearchInput
             label="🎯 Hedef Şehir"
@@ -201,6 +202,7 @@ export default function MapScreen() {
             value={targetCity}
             onSelect={setTargetCity}
             icon="location-outline"
+            cityType="destination"
           />
         </View>
 

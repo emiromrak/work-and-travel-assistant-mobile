@@ -330,6 +330,7 @@ export default function ProfileScreen() {
             value={stateCity}
             onSelect={setStateCity}
             icon="location-outline"
+            cityType="destination"
           />
 
           <View style={{ height: 1, backgroundColor: '#3282B820' }} />
@@ -341,6 +342,7 @@ export default function ProfileScreen() {
             value={startCity}
             onSelect={setStartCity}
             icon="home-outline"
+            cityType="current"
           />
 
           <View style={{ height: 1, backgroundColor: '#3282B820' }} />
